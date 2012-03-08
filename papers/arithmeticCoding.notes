@@ -1,0 +1,64 @@
+Arithmetic Coding for Data Compression
+
+problem: huffman coding sucks
+
+insight: we can do better using arithmetic coding
+
+==================================================================
+
+goal of compression:
+- transmit more probable symbols in fewer bits than less probable ones
+
+two parts:
+1) coder/decoder - algorithms for symbol substitution
+2) model
+- infers probabilities of symbols for coder and decoder
+- may be "fixed" and context-invarient
+-- ie, supposed to model all of english
+- may be "exact"
+-- perfect probabilities for the specific message
+- may be "adaptive" to the input
+-- must be sent in message to decoder
+
+huffman coding is considered optimal ("minimum redundancy")
+- but it's not! stores up to an extra bit per symbol because symbols
+must translate into an integral (non-zero) number of bits
+- particularly bad when a symbol's probability approaches 1
+
+arithmetic coding is better!
+- messages represented by an interval of reals in [0, 1)
+- model assigns each symbol a partition of the interval, based on frequency
+-- more frequent character, larger partition of interval
+- encoding is done by restricting the interval for the message according
+to the next symbol's partition
+- decoding determines the next symbol by matching the message into the
+correct partition
+
+optimality?
+- compression ratio depends on model, but if model is perfect for a message,
+compression ratio will be optimal!
+-- number of bits used = entropy of message relative to model
+
+other concerns:
+- messages must be terminated with an EOM
+-- otherwise messages of all one symbol cannot be decoded (interval
+still [0, 1))
+- underflow issues if too much entropy?
+- incremental (non-blocking) operation?
+- how to represent the model?
+
+performance:
+- high-efficiency compression (better than huffman / dictionary encoding)
+- looks to be about 2x faster than huffman coding in both encode/decode
+
+==================================================================
+
+takeaways for us:
+- fast, efficient compression -> right up our alley
+- looks like it would chunk well
+-- useful for the skiplist structure
+- requires building/storage of the model for each chunk, though
+-- unclear what the overhead would be
+- also unclear: interaction with binary vs. text storage formats
+-- more uniform probability distribution for binary format?
+
