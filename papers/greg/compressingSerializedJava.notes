@@ -1,0 +1,28 @@
+Compressing serialized java objects: a comparative analysis of six
+compression methods
+
+(could not get ahold of paper...)
+
+=======================================================================
+
+Abstract:
+
+Java objects are serialized into a linear stream of bytes so that
+they can be stored in persistent storage or passed by value as
+parameters to remote method invocations. Storing or transmitting
+a compressed version of the object is desirable for better storage
+or transmission efficiency. Lossless compression methods have been
+in use for long and their relative merits have been considered in
+many studies. In this paper, we study the relative merits of six
+well known compression methods in the context of serialized Java
+objects. To our knowledge, this is the only such study that considers
+all six compression methods in one study. A conclusion of our study is
+that LZMA yields the best compromise between compression ratio and
+compression speed for Java objects. BZip2 yields similar results for
+objects that do not contain images, but requires longer runtime with
+such objects.
+
+=======================================================================
+
+Relevancy:
+- make sure to experiment with LZMA and BZip2!

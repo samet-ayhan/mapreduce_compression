@@ -1,0 +1,220 @@
+Here's a big list of papers, and the people (in theory) reading them.
+
+S for Samet, G for Greg, K for Kishan,
+A for all (includes class papers), ? for probably not relevant...
+
+===========================================================================
+	
+The paper:
+	
+[A]	Avrilia Floratou, Jignesh M. Patel, Eugene J. Shekita, and Sandeep
+		Tata. 2011. Column-oriented storage techniques for MapReduce.
+		Proc. VLDB Endow. 4, 7 (April 2011), 419-429.
+	
+===========================================================================
+	
+Cites:
+	
+[A]	D. Abadi, S. R. Madden, and N. Hachem. Column-Stores
+		vs. Row-Stores: How Different Are They Really? In
+		SIGMOD, pages 967–980, 2008.
+	
+[G]	D. J. Abadi, S. Madden, and M. Ferreira. Integrating
+		Compression and Execution in Column-Oriented Database
+		Systems. In SIGMOD, pages 671–682, 2006.
+	
+	D. J. Abadi, D. S. Myers, D. J. DeWitt, and S. Madden.
+		Materialization Strategies in a Column-Oriented DBMS. In
+		ICDE, pages 466–475, 2007.
+	
+	A. Abouzeid, K. Bajda-Pawlikowski, D. J. Abadi, A. Rasin,
+		and A. Silberschatz. HadoopDB: An Architectural Hybrid
+		of MapReduce and DBMS Technologies for Analytical
+		Workloads. PVLDB, 2(1):922–933, 2009.
+	
+[G]	A. Ailamaki, D. DeWitt, M. D. Hill, and M. Skounakis.
+		Weaving relations for cache performance. In VLDB, pages
+		169–180, 2001.
+	
+[?]	P. A. Boncz, M. Zukowski, and N. Nes. MonetDB/X100:
+		Hyper-Pipelining Query Execution. In CIDR, pages
+		225–237, 2005.
+	
+	Q. Chen et al. Efficiently Support MapReduce-like
+		Computation Models Inside Parallel DBMS. In IDEAS,
+		pages 43–53, 2009.
+	
+	S. Chen. Cheetah: A High Performance, Custom Data
+		Warehouse on Top of MapReduce. PVLDB,
+		3(2):1459–1468, 2010.
+	
+[S]	J. Dean and S. Ghemawat. MapReduce: Simplified Data
+		Processing on Large Clusters. CACM, 51(1):107–113, 2008.
+	
+[A]	J. Dean and S. Ghemawat. MapReduce: A Flexible Data
+		Processing Tool. CACM, 53:72–77, January 2010.
+	
+[G]	J. Dittrich, J.-A. Quian-Ruiz, A. Jindal, Y. Kargin,
+		V. Setty, and J. Schad. Hadoop++: Making a Yellow
+		Elephant Run Like a Cheetah. PVLDB, 3(1):518–529, 2010.
+	
+[G]	Y. He, R. Lee, Y. Huai, Z. Shao, N. Jain, X. Zhang, and
+		Z. Xu. RCFile: A Fast and Space-efficient Data Placement
+		Structure in MapReduce-based Warehouse Systems. In
+		ICDE, 2011.
+	
+	S. Idreos, M. L. Kersten, and S. Manegold. Self-organizing
+		Tuple Reconstruction in Column-Stores. In SIGMOD,
+		pages 297–308, 2009.
+	
+[?]	E. Jahani, M. J. Cafarella, and C. Re.  Automatic
+		Optimization for MapReduce Programs. PVLDB, 4(6),
+		2011.
+	
+[G]	D. Jiang, B. C. Ooi, L. Shi, and S. Wu. The Performance of
+		MapReduce: An In-depth Study. PVLDB, 3(1):472–483,
+		2010.
+	
+	C. Lemka, K.-U. Sattler, F. Faerber, and A. Zeier. Speeding
+		Up Queries in Column Stores. 6263:117–129, 2010.
+
+	S. Melnik et al. Dremel: Interactive Analysis of Web-Scale
+		Datasets. PVLDB, 3(1):330–339, 2010.
+	
+[?]	C. Olston, B. Reed, A. Silberstein, and U. Srivastava.
+		Automatic Optimization of Parallel Dataflow Programs. In
+		USENIX, pages 267–273, 2008.
+	
+[?]	C. Olston, B. Reed, U. Srivastava, R. Kumar, and
+		A. Tomkins. Pig Latin: A Not-So-Foreign Language for
+		Data Processing. In SIGMOD, pages 1099–1110, 2008.
+	
+	A. Pavlo, E. Paulson, A. Rasin, D. J. Abadi, D. J. DeWitt,
+		S. Madden, and M. Stonebraker. A Comparison of
+		Approaches to Large-Scale Data Analysis. In SIGMOD,
+		pages 165–178, 2009.
+	
+[?]	W. Pugh. Skip Lists: A Probabilistic Alternative to
+		Balanced Trees. CACM, 33(6):668–676, 1990.
+	
+===========================================================================
+	
+Cited by:
+	
+[?]	Tanu Malik, Neil Best, Joshua Elliott, Ravi Madduri, and Ian Foster. 
+		2011. Improving the efficiency of subset queries on raster
+		images. In Proceedings of the ACM SIGSPATIAL Second
+		International Workshop on High Performance and Distributed
+		Geographic Information Systems (HPDGIS '11). ACM, New York,
+		NY, USA, 34-37. DOI=10.1145/2070770.2070776
+		http://doi.acm.org/10.1145/2070770.2070776
+	
+[G]	Alekh Jindal, Jorge-Arnulfo Quiané-Ruiz, and Jens Dittrich. 2011.
+		Trojan data layouts: right shoes for a running elephant.
+		In Proceedings of the 2nd ACM Symposium on Cloud Computing
+		(SOCC '11). ACM, New York, NY, USA, , Article 21 , 14 pages.
+		DOI=10.1145/2038916.2038937
+		http://doi.acm.org/10.1145/2038916.2038937 
+
+===========================================================================
+
+MapReduce:
+
+[S]	Chuck Lam.  Hadoop in Action.  2011.  (book?)
+
+[S]	Matei Zaharia, Andy Konwinski, Anthony D. Joseph, Randy Katz,
+		and Ion Stoica. 2008. Improving MapReduce performance
+		in heterogeneous environments. In Proceedings of the
+		8th USENIX conference on Operating systems design and
+		implementation (OSDI'08). USENIX Association,
+		Berkeley, CA, USA, 29-42. 
+
+[A]	Michael Stonebraker, Daniel Abadi, David J. DeWitt, Sam Madden,
+		Erik Paulson, Andrew Pavlo, and Alexander Rasin. 2010.
+		MapReduce and parallel DBMSs: friends or foes?. Commun.
+		ACM 53, 1 (January 2010), 64-71. DOI=10.1145/1629175.1629197
+		http://doi.acm.org/10.1145/1629175.1629197
+
+===========================================================================
+
+Column Stores:
+
+[S]	Mike Stonebraker, Daniel J. Abadi, Adam Batkin, Xuedong Chen,
+		Mitch Cherniack, Miguel Ferreira, Edmond Lau, Amerson Lin,
+		Sam Madden, Elizabeth O'Neil, Pat O'Neil, Alex Rasin,
+		Nga Tran, and Stan Zdonik. 2005. C-store: a column-oriented
+		DBMS. In Proceedings of the 31st international conference
+		on Very large data bases (VLDB '05). VLDB Endowment 553-564. 
+
+[S]	Daniel J. Abadi, Peter A. Boncz, and Stavros Harizopoulos. 2009.
+		Column-oriented database systems. Proc. VLDB Endow. 2,
+		2 (August 2009), 1664-1665. 
+
+===========================================================================
+
+Compression:
+
+[A]	Ian H. Witten, Radford M. Neal, and John G. Cleary. 1987.
+		Arithmetic coding for data compression. Commun.
+		ACM 30, 6 (June 1987), 520-540. DOI=10.1145/214762.214771
+		http://doi.acm.org/10.1145/214762.214771 
+
+[S]	Binh Dao Vo and Kiem-Phong Vo. 2007. Compressing table data
+		with column dependency. Theor. Comput. Sci. 387, 3
+		(November 2007), 273-283. DOI=10.1016/j.tcs.2007.07.016
+		http://dx.doi.org/10.1016/j.tcs.2007.07.016
+
+	Jacob Ziv and Abraham Lempel; A Universal Algorithm for Sequential
+		Data Compression, IEEE Transactions on Information Theory,
+		23(3), pp. 337–343, May 1977.
+
+	Jacob Ziv and Abraham Lempel; Compression of Individual Sequences
+		via Variable-Rate Coding, IEEE Transactions on Information
+		Theory, 24(5), pp. 530–536, September 1978.
+
+	David, Salomon (2007). Data Compression: The Complete Reference (4 ed.).
+		Springer. p. 241. ISBN 9781846286025.
+		Online at: http://books.google.com/books?id=ujnQogzx_2EC
+
+[G]	Ghassan Samara, Ahmad El-Halabi, and Jalal Kawash. 2007. Compressing
+		serialized java objects: a comparative analysis of six
+		compression methods. In Proceedings of the third conference
+		on IASTED International Conference: Advances in Computer
+		Science and Technology (ACST'07). ACTA Press, Anaheim, CA,
+		USA, 427-431. 
+
+[G]	Yanpei Chen, Archana Ganapathi, and Randy H. Katz. 2010. To compress
+		or not to compress - compute vs. IO tradeoffs for mapreduce
+		energy efficiency. In Proceedings of the first ACM SIGCOMM
+		workshop on Green networking (Green Networking '10). ACM,
+		New York, NY, USA, 23-28. DOI=10.1145/1851290.1851296
+		http://doi.acm.org/10.1145/1851290.1851296 
+
+[G]	Bogdan Nicolae. 2010. High throughput data-compression for cloud
+		storage. In Proceedings of the Third international
+		conference on Data management in grid and peer-to-peer
+		systems (Globe'10), Abdelkader Hameurlain, Franck Morvan,
+		and A. Min Tjoa (Eds.). Springer-Verlag, Berlin,
+		Heidelberg, 1-12. 
+
+	Bogdan Nicolae. 2011. On the benefits of transparent compression for
+		cost-effective cloud data storage. In Transactions on
+		large-scale data- and knowledge-centered systems III,
+		Abdelkader Hameurlain, Josef Küng, and Roland Wagner
+		(Eds.). Springer-Verlag, Berlin, Heidelberg 167-184.
+
+	Slobodan Vucetic. 2006. A Fast Algorithm for Lossless Compression
+		of Data Tables by Reordering. In Proceedings of the Data
+		Compression Conference (DCC '06). IEEE Computer Society,
+		Washington, DC, USA, 469-. DOI=10.1109/DCC.2006.1
+		http://dx.doi.org/10.1109/DCC.2006.1  
+
+===========================================================================
+
+Miscelleneous:
+
+[S]	Sanjay Ghemawat, Howard Gobioff, and Shun-Tak Leung. 2003.
+		The Google file system. SIGOPS Oper. Syst. Rev. 37,
+		5 (October 2003), 29-43. DOI=10.1145/1165389.945450
+		http://doi.acm.org/10.1145/1165389.945450
+
