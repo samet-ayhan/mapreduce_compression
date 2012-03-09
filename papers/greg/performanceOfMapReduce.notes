@@ -1,0 +1,91 @@
+The Performance of MapReduce: An In-depth Study
+
+problem: MapReduce is inefficient, and scaling by adding nodes is
+not always a viable option (ie, in the commercial cloud)
+
+insight: we can improve the performance by a factor of 2-4x by
+being clever!
+
+===================================================================
+
+factors which affect MR performance:
+- I/O mode (directly from disk or streamed from another process)
+- data parsing (records parsed as immutable or mutable objects?)
+- data indexing (none (default), natural, explicit)
+- grouping schemes during shuffle (currently non-extensible)
+- block-level runtime job scheduling (depends on data splits)
+
+paper implements:
+- HDFS direct I/O mode for local reads and writes
+- mutable decoders for parsing text, Hadoop Writeables, protobufs,
+and BerkeleyDB records
+- new InputFormat which constructs splits based on a range-index
+(for tuning the scheduler)
+- modified Shuffle stage that uses fixed-size djb2 fingerprints to
+avoid having to deserialize entire keys for comparision
+
+===================================================================
+
+experiments (a lot!):
+
+1) loading time of data - text vs. binary
+- binary more efficient, but less so than expected
+-- about 500 seconds across 10, 50, 100 nodes
+- conclusion: not a major factor
+
+2) scheduling with variable block size
+- dummy task to merely read and discard data
+- 10GB file split into chunks of 64MB up to 5GB
+- results:
+-- larger block sizes => fewer map tasks => better performance
+-- smaller block sizes => more map tasks => better failure recovery
+-- 512MB is a good compromise
+
+3) tested I/O mode on 5, 10, 20, 40GB datasets
+- direct I/O consistently about 10% better
+- conclusion: not a major factor
+
+4) tested parsing modes (text, Writable, protobuf, bDB) (mutable vs. immutable)
+- used standalone record parser on 512MB dataset
+- mutable always beats immutable, by up to 10x
+-- profiling reveals due to CPU overhead (80-90%) of object creation
+- differences between text and binary only about 2x
+- conclusion: mutability matters more than binary/text!
+
+5) grep task (different block sizes: 512MB, 5GB)
+- scheduler reassigns straggler tasks on slow nodes to faster ones
+- leads to disk bandwidth contention on slow nodes
+- results in 20-25% slowdown when many blocks!
+
+6) selection task 
+- vanilla hadoop vs. mutable decoding vs. (mutable + index)
+- query to select 36K records out of 18M:
+-- mutable decoding 2x faster than vanilla
+-- (mutable + index) 2.5-3x faster than plain mutable
+- also experimented with hadoopDB:
+-- 40% worse than hadoop with low-selectivity query, improves for more
+selective queries
+
+7) aggregation task
+- vanilla hadoop vs. mutable decoding vs. (mutable + fingerprints)
+- queries to group records into 2 million groups, 2000 groups:
+-- mutable decoding 63% faster than vanilla
+-- fingerprinting faster than mutable by 20-25%
+- additional query to group using an index:
+-- index-based implementations 3-5x faster than non-indexed
+
+8) join task
+- vanilla vs. mutable vs. simple indexing vs. partition-join
+- > 14x improvement using (mutable + indexing + partition-join)
+
+===================================================================
+
+takeaways:
+- data format (text/binary) less important than mutable parsing
+-- could explore effect on column-storage...
+- split size matters a lot, too
+-- could also affect compression -> need to experiment with block sizes
+and split sizes
+- no compression used at all here...
+
+

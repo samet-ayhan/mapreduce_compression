@@ -1,0 +1,98 @@
+Hadoop++: Making a Yellow Elephant Run Like a Cheetah
+(Without It Even Noticing)
+
+problem:  mapreduce is still slow.  we wanna make it faster without
+just backending it with a parallel dbms (as in hadoopDB) 
+
+insight:  we can capitalize on the extensibility of hadoop to do this
+using user-defined functions and inputformats!
+
+contributions:
+- formally define the "hadoop query execution plan"
+- new load-time "trojan indexing" technique for scanning data
+- new split-time "trojan join" technique for doing joins
+- experimentation of vanilla hadoop vs. hadoop w/ trojan techniques
+
+==========================================================================
+
+the hadoop plan:
+- fixed and non-optimizable
+- has 10 UDFs which may be overloaded:
+-- block, split, itemize, mem, map, sh, cmp, grp, combine, reduce
+- "a distributed external merge sort where the run generation and
+first level merge is executed in the mapper subplan... higher level
+and final merges are executed in the reducer subplans"
+
+1) data load phase:
+- partitions and replicates data into splits
+- separate subplans store splits on storage nodes
+
+2) map phase:
+- mapper subplans read data from storage nodes, perform map in-memory,
+and write to local disk as intermediate files
+
+3) shuffle phase:
+- re-arranges intermediates so that each reducer has all the data for
+his specified keys
+- FULLY-BLOCKING
+
+4) reduce phase
+- reducers take shuffled data, do reduction, and write results to local disk
+
+==========================================================================
+
+trojan index:
+- lightweight, non-invasive covering index for input data
+-- "sparse directory over the sorted split data"
+- embedded into split as (data, index, header, footer)
+- generated at load time (as its own MR job)
+- overriding UDFs "split" and "itemize" allow the MR job to read
+data using scan or index, as appropriate
+
+trojan join:
+- lightweight and non-invasive?
+- basically partitions data on join keys BEFORE map phase
+-- data with same key FROM BOTH RELATIONS ends up in same split
+-- join performed locally and efficiently during map
+-- shuffle and reduce are no-ops
+- done as an MR job at load-time, like indexing
+-- works best for repeated queries on same keys, then... (common case?)
+
+techniques for index and join may be combined!
+
+==========================================================================
+
+experiments:
+- run on benchmarks from hadoopDB paper
+- vanilla hadoop vs. hadoopDB vs. hadoop++ (uses trojan techniques)
+
+1) data loading
+- hadoop++ comparable with hadoopDB, 8-10x slower than vanilla hadoop
+- tradeoff: loadtime vs. query time?
+-- extra work to partition and index...
+
+2) selection (36000 tuples per node)
+- hadoop++ 4x faster than vanilla and chunked hadoopDB
+- slightly faster than regular hadoopDB
+- 1GB splits perform better than 256MB
+
+3) join task
+- hadoop++ up to 20x faster than vanilla (using index)
+- up to 1.6x faster (using 1GB splits)
+
+4) fault-tolerance experiments
+- killed nodes at random after 50% of work done, measured time to reschedule
+and complete work:
+-- hadoop++ comparable to hadoop (depending on split sizes)
+- ran random nodes with I/O-intensive workload to make them a straggler,
+measured time to reschedule and complete work:
+-- hadoop++ comparable to hadoop, much faster than hadoopDB
+
+==========================================================================
+
+takeaways:
+- not super-relevant to us, except that:
+- split size matters!
+-- larger -> more index coverage (maybe more skiplist coverage, too??)
+-- smaller -> easier to restart failed tasks
+
