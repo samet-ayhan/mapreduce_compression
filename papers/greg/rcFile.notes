@@ -1,0 +1,97 @@
+RCFile: A Fast and Space-efficient Data Placement
+Structure in MapReduce-based Warehouse Systems
+
+problem: MR data storage needs to support fast data loading, fast
+query processing, efficient utilization, and adaptivity to dynamic
+workloads
+
+insight: RCFile (record-columnar) is a clever application of ideas
+from row-storage and column-storage formats which is better than any
+of them!
+
+======================================================================
+
+existing alternatives:
+
+1) row-store (most popular in conventional DBs)
+- records placed contiguously in a disk block
+- weaknesses for read-only DW systems:
+-- slow because must read ALL fields in a record
+-- cannot compress well because fields stored contiguously
+- strengths:
+-- fast loading/high adaptivity because whole record stored 
+on the same node (no need to reconstruct)
+
+2) col-store (optimized for DWs)
+- partitions data into "column groups" (maybe of only 1 column) and
+stores column groups separately
+- strengths:
+-- high compression ratio due to higher data locality in cols
+-- avoids unnecessary column reads
+- weaknesses:
+-- columns may be on different nodes -> high reconstruction costs
+-- column groups don't adapt well for dynamic workloads
+-- column groups may underutilize storage due to redundancy
+
+3) hybrid-store (PAX)
+- row groups stored in a single disk page
+- stored in a column-oriented fashion within the disk page
+- strengths:
+-- adaptive to dynamic workloads because records are kept with high locality
+-- improves performance of CPU cache when data is loaded in memory
+- weaknesses:
+-- not usually associated with compression
+-- cannot improve I/O performance because nothing changes above the
+page level
+-- fixed page size doesn't adapt well to heterogeneous data sets
+
+======================================================================
+
+RCFile:
+- data carved up into "row groups" within HDFS blocks
+- row groups stored in a columnar format
+-- entire columns compressed using GZIP (rather than RLE)
+-- does not chunk columns for compression =(
+- support for append-only (same as HDFS)
+- strengths:
+-- when reading a row group, not necessary to read in all columns
+-- lazy decompression -> skip over decompressing a column if it's
+not needed
+
+concern: row group size
+- large group -> better compression (up to a point)
+- small group -> better read performance, more benefit from lazy decomp, 
+smaller memory footprint (less contention with other jobs)
+- Facebook says sweet spot is 4MB
+
+implementation:
+- RCFileInputFormat, RCFileRecordReader, RCFileOutputFormat
+-- also RCFile.Reader (and Writer) for non-Hadoop usage
+
+======================================================================
+
+experimentation:
+- Palvo et al benchmark (pagerank data)
+- raw data vs. row-store vs. col-store (grp size 1) vs. col-store (larger grp
+size) vs. RCFile
+
+1) storage space
+- row-store 2x smaller than raw data, RCFile about 10GB smaller still
+
+2) loading time
+- rowstore < RCFile << col-grp < col-store
+
+3) query time
+- high-selectivity query -> RCFile is awesome (15% faster or so)
+- low-selectivity -> col-grp best, RCFile second
+-- less advantage from lazy decompression
+
+4) RCFile with varying group size:
+- TPC-H and Facebook-generated data
+- sweet spot seems to be about 4MB in all cases
+
+======================================================================
+
+takeaways:
+- not too relevant to what we're trying to do??
+

@@ -1,0 +1,49 @@
+To Compress or Not To Compress - Compute vs. IO
+tradeoffs for MapReduce Energy Efficiency
+
+problem:  MR jobs are very energy-intensive
+
+insight:  compression can shift computation load from I/O to CPU,
+thus reducing energy consumption
+
+contributions:
+- power-consumption experiments (see below)
+- "decision algorithm" to decide whether or not to compress data
+
+=========================================================================
+
+hadoop 0.18.2 has built-in support for:
+- compressing output data, intermediate data, or both
+- compressing with GZIP (deflate) and LZO (optimized for decomp speed)
+- per-record and per-block compression
+
+=========================================================================
+
+experimentation:
+- measured energy at wall socket using a power meter
+-- holistic system perfomance, captures idle time
+- only measured consumption at one worker (?)
+
+1) no-comp vs. all-comp vs indermediate-comp using randomshakespeare data
+- energy consumption tracks duration of job
+- compression makes read cheaper, write and shuffle more expensive
+
+2) compression on different sources
+- high compression ratio -> significant power savings
+- low compression ratio -> wasted work
+
+3) changing memory params (block size, etc)
+- tradeoffs from #2 relatively invarient here
+
+4) assigning more map tasks
+- "smooths out" any benefits
+- more tasks -> task launch costs dominate
+
+=========================================================================
+
+takeaways:
+- compression affects more than just performance
+- sampling can be useful to tune a "decision algorithm"
+-- though they didn't do it in this paper
+- not super-relevant, to be honst...
+

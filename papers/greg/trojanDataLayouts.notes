@@ -1,0 +1,92 @@
+Trojan Data Layouts: Right Shoes for a Running Elephant
+
+problem:  mapReduce performance STILL sucks... 
+
+insight:  we should look at data layouts PER dfs block!
+
+========================================================================
+
+background:
+- row-stores read all the columns every time, and can't compress =(
+- col-stores have to talk over the network to build tuples =(
+- pax-stores try to find a middle ground, but don't get I/O efficiency boosts
+because everything's the same above the block level
+
+Trojan layout:
+- same data inside a block, like PAX
+- any internal data layout (set of column groups) allowed inside a block
+-- store different ones across block replicas?
+- internal layout should be automagically determined based on incoming
+query workload!
+
+contributions:
+- novel algorithm for generating "interesting" column groups
+- algorithm for generating trojan layouts well-suited for a query workload
+- implemented this in TrojanHDFS
+- evaluated against real-world benchmarks (3.5-4.8x faster than other layouts!)
+
+========================================================================
+
+column-grouping alg:
+- define "interestingness" = average (normalized) "mutual information"
+over all attribute pairs in a col-group
+-- ("mutual information" not in terms of values, but access patterns for
+a set of queries)
+- need to pack column groups into a block to maximize total interestingness
+-- 0-1 knapsack (NP-hard) with disjointness constraint
+-- solve using a branch-and-bound tree
+
+layout-generating alg:
+- same "interestingness" measure used to group queries by the columns
+they touch
+- pick a set of groups matching the replication factor
+
+TrojanHDFS:
+- distributed filesystem tracks col-group metadata for each replica
+- sample query workload MUST be provided at data-load time
+- layout-generating wizard generates per-replica column groups
+
+query processing:
+- map and reduce are untouched
+- itemize is overridden by trojanHDFS to pick a good column group before
+doing the actual itemize
+- different scheduling policies:
+-- map task to best-layout node
+-- map task anywhere, fetch data from best-layout node
+-- map task to 2nd-best-layout (in case of contention)
+
+========================================================================
+
+experimentation:
+
+1) compare access-time using TPC-H, SSB, SDSS
+- trojan vs. row-store vs. pax
+- 3.5x improvement over pax, 4.8x improvement vs row-store
+
+2) comparison of scheduling policies using TPC-H
+- fetch-best no worse than 9% overhead compared to best
+- 2nd-best up to 4x as bad as best
+
+3) data load perfomance: HDFS vs. trojan
+- trojan up to 2x as slow using virtual nodes (already cpu-intensive)
+- "negligable" on physical-nodes-only
+
+4) compared with HYRISE (another layout optimizer)
+- HYRISE doesn't estimate cost using column groupings... not clear
+how it actually does, though
+- 6-14% improvement on TPC-H using trojan
+- HYRISE requires 64 joins, compared to 20 for trojan
+
+6) grouping alg performance
+- pruning threshold / disjointness constraint work as they should
+- offline grouping alg, so linear scale with query workload is acceptable
+
+========================================================================
+
+takeaways:
+- adaptivity is good
+- knowing your queries ahead of time is real good (but is cheating?)
+- which is more important?  data layout or compression?
+-- should we experiment with compression and IGNORE data layout?
+-- it does matter, though -> RLE and stuff work better in column stores...
+

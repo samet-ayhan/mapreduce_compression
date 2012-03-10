@@ -1,0 +1,68 @@
+Weaving Relations for Cache Performance
+
+problem: db performance can be improved by using colstores instead of
+rowstores (better cache behavior), but then we have to pay for tuple
+reconstruction
+
+insight: hybrid approach! store data on a page same as in a rowstore,
+but within the page use column-oriented approaches
+
+===========================================================================
+
+n-ary storage model (rowstore):
+- poor cache performance because whole row read at a time, even if
+many columns aren't needed
+
+decomposition storage model (colstore):
+- stores relations by columns instead of rows
+- better cache performance if only a few columns needed at a time
+- stitching relations back together is real expensive =(
+-- lots of I/Os to get columns stored on different pages
+-- can try to group columns into groups based on "affinity", but need to
+know your query workload a priori
+
+partition attributes across (pax):
+- keep all attributes for a set of rows on the same page
+- internally store the page as columns
+-- cache performs better, but don't need many I/Os to do joins on columns!
+
+implemented in SHORE:
+- underlying pax storage
+- selection predicates pushed into scan operator for efficient projection
+- same for efficient dynamic-hash-join
+
+===========================================================================
+
+experimentation:
+
+1) selection on varying number of attributes
+- pax tracks nsm (close to constant)
+- dsm degrades exponentially with no. of attributes
+
+2) cache behavior
+- pax penalties much lower than nsm (higher spatial locality)
+- 75% reduction in processor stall time using pax
+
+3) sensitivity to projectivity (zoom-in on 1)
+- pax benefits more when fewer attributes needed
+- execution times converge as relations grow
+-- (larger relation -> fewer records fit in a page)
+
+4) bulk-loading
+- pax slightly slower than nsm, much much faster than dsm (~9x ?)
+
+5) TPC-H queries (read-only)
+- pax/nsm speedup between 6-48%, depending on how many tuples are
+accessed and how many attributes are needed
+
+6) update queries
+- speedup between 11-16%, based on selectivity
+
+===========================================================================
+
+takeaways:
+- even in regular databases, layout matters!
+-- tradeoff in cache vs. I/O efficiency
+- in MapReduce, these should be much more noticable!
+-- cache -> deserialization costs, I/O -> network costs
+
