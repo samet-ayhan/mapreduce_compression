@@ -1,0 +1,95 @@
+Integrating Compression and Execution in Column-Oriented Database
+Systems
+
+problem:  compression in dbs is good.  no one's done it in a
+column-store...
+
+contributions:
+- survey of dbms compression algs and how well they apply to col-stores
+- experiments comparing different algs
+- architecture for query optimizer in C-Store to run directly
+on compressed data
+- experiments on secondary/tertiary sort orders on columns (?)
+
+=====================================================================
+
+compression schemes:
+
+1) null suppression
+- in this paper, rather than padding data in columns to a fixed size,
+fields can be variable and have a "size" prefix
+
+2) dictionary encoding
+- idea is to replace frequent patterns with smaller "codewords"
+- much more efficient across columns! (exploits fixed-length codes
+for fast I/O)
+- also, variable-length codes such as ALM, ZIL
+
+3) run-length endoding
+- good for sorted columns; runs much more common than in row dbs
+- turns "0, 1, 1, 1, 1, 2" into "0, (4x1), 2"
+
+4) bit-vector encoding
+- columns with limited numbers of possible data values stored as a set of
+bitstrings (1 per value)
+
+5) heavyweight schemes:
+- Lempel-Ziv (gzip), Huffman, Arithmetic
+- decomp costs were too high... =(
+
+=====================================================================
+
+implementation in C-Store:
+- class representing a compressed_block of data
+- data_source operator (reads data from disk, returns as a compressed_block)
+-- can handle selection predicates (often without decompressing!)
+- query operators extended to use compressed_block interface
+-- properties like isOneValue?, isValueSorted?, isPosContig?
+
+=====================================================================
+
+experiments:
+
+1) aggregation with eager decompression:
+- no-comp vs. LZ vs. null-sup vs. RLE vs. dict vs. bv
+-- dict and LZ get smallest column sizes, RLE next smallest
+-- but! not necessarily a good indicator of query performance!
+(ie, bv sucked worse than no-comp because of high cost to decompress)
+
+2) same experiment, but operators work directly on compressed data
+- no-comp vs. dict vs. RLE vs. bv
+-- compression schemes MUCH faster than no-comp here, dict and RLE best
+- rerun with contention to show that decompression is expensive
+-- duh?
+
+3) high-cardinality columns (lots of distinct values)
+- no-comp vs. LZ vs. dict vs. RLE, same agg query
+-- RLE and LZ suffer due to lack of data locality, unless runs
+are deliberately introduced
+
+4) ran experiments with TPC-H data
+- reflected experiments with generated data pretty well
+
+5) different queries: selection
+- col1 variably-compressed (predicate), col2 rle-compressed (filter):
+-- compression leads to 10x speedup! (esp. RLE and bv)
+- col1 rle-compressed (predicate), col2 variably-compressed (filter):
+-- bv sucks, dict and rle lead to 5-10x speedup?
+
+6) different queries: join
+- rle 50x speedup over no-comp
+- bv 4x speedup
+- dict only 25% speedup
+-- (operator cannot do as much cleverness with compressed data)
+
+=====================================================================
+
+takeaways:
+- is arithmetic coding too heavyweight?? =(
+- big speedups come from the query system knowing about the underlying
+compression
+-- can we do something similar in MR...?
+- it also helps to be able to re-organize/sort data to increase
+locality before compressing
+-- again, can we do something similar here?
+

@@ -1,0 +1,70 @@
+High Throughput Data-Compression for Cloud Storage
+
+problem: in the commercial cloud, we want to minimize data and
+storage space, but we also want high throughput with heavy
+concurrency (means high bandwidth utilization!)
+
+insight: applying data compression transparently as part of
+the storage service can help!
+
+contributions:
+- proposed generic sampling-based compression technique which
+dynamically adapts to heterogeneity of data
+- applied this technique to BlobSeer (dms for data-intensive apps)
+- tested this setup against Grid5000
+
+====================================================================
+
+issues for compression in this context:
+- needs to be transparent!
+- heterogeneous data is not always easily compressible!
+-- text docs are easy (esp. structured text like logs)
+-- multimedia is real hard
+- data access MUST be fast, so we need low computational overhead
+- same goes for memory!
+
+design principles:
+- compress in chunks! (keep I/O non-blocking)
+- sample chunks to determine whether they are worth compressing
+- user configures compression algorithm
+
+implementation:
+- compression layer above client-side networking layer in BlobSeer
+(blob-oriented scalable storage service)
+- on write/append:
+-- data chunked, chunks processed in parallel(!)
+-- chunk sampled to determine if compression ratio > threshold
+-- if so, chunk compressed before being passed to net layer/storage
+- on read:
+-- chunk pulled from net layer/storage
+-- if chunk metadata indicates compression, decompressed
+
+** paper uses LZO and BZIP2 compression!
+
+====================================================================
+
+experimentation:
+
+1) concurrent blob appends
+- N clients, 512MB appends, 64MB chunks
+- tested no-comp vs. LZO vs. BZIP2 with both random and textual data,
+measured aggregated throughput over all clients
+-- everyone looks the same on random data (sampling ensures no compression
+applied)
+-- on compressible data, BZIP sucks, LZO is about 2x slower than no-comp,
+but still scales linearly w/ no. of appenders
+
+2) concurrent reads of data
+- N clients, 512MB reads from 64MB compressed chunks
+-- LZO scales well with no-comp, BZIP sucks (in throughput)
+-- BZIP2 saves 60% of storage space, LZO 40% (should apply to bandwidth
+as well!)
+
+====================================================================
+
+takeaways:
+- BZIP and LZO worth looking at
+- potential to do sampling to determine whether or not to compress data? 
+-- (we don't need to do it, but it's interesting all the same...)
+- chunks! (but we knew this already)
+
