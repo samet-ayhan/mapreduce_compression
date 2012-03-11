@@ -13,10 +13,49 @@ University of Maryland, College Park}
 
 \section{Inspiration: Floratou et al.}
 
+Our starting point for this project was a 2011 paper by Floratou et al., entitled
+\emph{Column-oriented storage techniques for MapReduce} \cite{ref:floratou}.  This work
+seeks to address many of the issues related to performance in the Hadoop implementation
+of MapReduce by incorporating techniques used in column-oriented and parallel database
+systems.  In particular, contributions of the paper include:
+
+\begin{itemize}
+\item A novel column-oriented data storage format called \verb+ColumnInputFormat+,
+which improves on existing column-storage formats like \verb+RCFile+ \cite{ref:rcfile}
+by allowing each column of a relation to be stored in separate disk blocks, increasing
+efficiency payoffs in caching and compression ratio.
+\item A \emph{lazy deserialization} scheme based on the SkipList \cite{ref:skiplist}
+data structure.  The scheme is designed so that column values need only be read
+in from disk if they are actually used, and blocks of unused values may be skipped
+over using pointer information embedded in the column file.  This avoids the
+heavy cost of deserializing every value in the column, whether or not that value
+is actually needed by the MapReduce task.
+\item Two techniques for compressing column files in a chunked manner, such that
+the SkipList deserialization scheme also avoids having to decompress a chunk if
+the values it contains are not needed.  These techniques make use of the lightweight,
+non-optimal LZO algorithm \cite{ref:lz77} \cite{ref:lz78} to do the compression of
+individual chunks.
+
+%% are these the right references for LZO???
+
+\item An experimental analysis of the above techniques, in comparison with other
+commmonly-used storage formats and compression techniques.  In general, 
+\verb+ColumnInputFormat+ and the compression schemes presented here are
+found to provide an order-of-magnitude speedup over the other configurations.
+\end{itemize}
+
+Of particular interest to us is the authors' claim that using heavier compression
+algorithms with better compression ratios does not lead to any speedup.  Apparently
+this is because such algorithms incur too much CPU overhead during decompression,
+and this outweighs any benefit gained by having to read in less data.  However,
+such claims were \emph{only} tested using the \verb+zlib+ compression library,
+which is an implementation of the Lempel-Ziv 77 algorithm \cite{ref:lz77}.
+
 \section{Background}
 \subsection{MapReduce}
 \subsection{Column-stores}
-\subsection{Parallel Databases (?)}
+\subsection{Parallel Databases}
+\subsection{Compression Techniques}
 
 \section{MapReduce Performance}
 \subsection{Serialization and Data Format}
@@ -26,13 +65,30 @@ University of Maryland, College Park}
 
 \section{Other Concerns}
 \subsection{Energy Efficiency}
-\subsection{anything else i'm forgetting (?)}
+\subsection{anything else i'm forgetting?}
+
+\section{Next Steps}
 
 \begin{thebibliography}{10}
 
 \bibitem{ref:floratou} Avrilia Floratou, Jignesh M. Patel, Eugene J. Shekita, and Sandeep
 	Tata. 2011. Column-oriented storage techniques for MapReduce.
 	Proc. VLDB Endow. 4, 7 (April 2011), 419-429.
+
+\bibitem{ref:lz77} Jacob Ziv and Abraham Lempel; A Universal Algorithm for Sequential
+        Data Compression, IEEE Transactions on Information Theory,
+        23(3), pp. 337–343, May 1977.
+
+\bibitem{ref:lz78} Jacob Ziv and Abraham Lempel; Compression of Individual Sequences
+        via Variable-Rate Coding, IEEE Transactions on Information
+        Theory, 24(5), pp. 530–536, September 1978.
+
+\bibitem{ref:skiplist} W. Pugh. Skip Lists: A Probabilistic Alternative to
+        Balanced Trees. CACM, 33(6):668–676, 1990.
+
+\bibitem{ref:rcfile} Y. He, R. Lee, Y. Huai, Z. Shao, N. Jain, X. Zhang, and
+        Z. Xu. RCFile: A Fast and Space-efficient Data Placement
+        Structure in MapReduce-based Warehouse Systems. In ICDE, 2011.
 
 \end{thebibliography}
 \end{document}
