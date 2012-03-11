@@ -36,7 +36,8 @@ the values it contains are not needed.  These techniques make use of the lightwe
 non-optimal LZO algorithm \cite{ref:lz77} \cite{ref:lz78} to do the compression of
 individual chunks.
 
-%% are these the right references for LZO???
+% are these the right references for LZO???  I don't think so, yet I cannot
+% find a better one... -Greg
 
 \item An experimental analysis of the above techniques, in comparison with other
 commmonly-used storage formats and compression techniques.  In general, 
@@ -49,7 +50,7 @@ algorithms with better compression ratios does not lead to any speedup.  Apparen
 this is because such algorithms incur too much CPU overhead during decompression,
 and this outweighs any benefit gained by having to read in less data.  However,
 such claims were \emph{only} tested using the \verb+zlib+ compression library,
-which is an implementation of the Lempel-Ziv 77 algorithm \cite{ref:lz77}.
+which is an implementation of the Lempel-Ziv '77 algorithm \cite{ref:lz77}.
 
 \section{Background}
 \subsection{MapReduce}
