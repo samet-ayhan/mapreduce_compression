@@ -135,6 +135,13 @@ MapReduce:
 		ACM 53, 1 (January 2010), 64-71. DOI=10.1145/1629175.1629197
 		http://doi.acm.org/10.1145/1629175.1629197
 
+[K] 	Anja Gruenheid, Edward Omiecinski, and Leo Mark. 2011. Query 
+	     	optimization using column statistics in hive. In Proceedings 
+		of the 15th Symposium on International Database Engineering 
+		& Applications (IDEAS '11). ACM, New York, NY, USA, 97-105. 
+		DOI=10.1145/2076623.2076636 
+		http://doi.acm.org/10.1145/2076623.2076636
+
 ===========================================================================
 
 Column Stores:
@@ -164,11 +171,11 @@ Compression:
 		(November 2007), 273-283. DOI=10.1016/j.tcs.2007.07.016
 		http://dx.doi.org/10.1016/j.tcs.2007.07.016
 
-	Jacob Ziv and Abraham Lempel; A Universal Algorithm for Sequential
+[K]	Jacob Ziv and Abraham Lempel; A Universal Algorithm for Sequential
 		Data Compression, IEEE Transactions on Information Theory,
 		23(3), pp. 337–343, May 1977.
 
-	Jacob Ziv and Abraham Lempel; Compression of Individual Sequences
+[K]	Jacob Ziv and Abraham Lempel; Compression of Individual Sequences
 		via Variable-Rate Coding, IEEE Transactions on Information
 		Theory, 24(5), pp. 530–536, September 1978.
 
@@ -203,11 +210,30 @@ Compression:
 		Abdelkader Hameurlain, Josef Küng, and Roland Wagner
 		(Eds.). Springer-Verlag, Berlin, Heidelberg 167-184.
 
-	Slobodan Vucetic. 2006. A Fast Algorithm for Lossless Compression
+[K]	Slobodan Vucetic. 2006. A Fast Algorithm for Lossless Compression
 		of Data Tables by Reordering. In Proceedings of the Data
 		Compression Conference (DCC '06). IEEE Computer Society,
 		Washington, DC, USA, 469-. DOI=10.1109/DCC.2006.1
 		http://dx.doi.org/10.1109/DCC.2006.1  
+
+[K]	Balakrishnan, R.; Sahoo, R.K., "Lossless compression for large scale 
+		cluster logs," Parallel and Distributed Processing Symposium, 
+		2006. IPDPS 2006. 20th International , vol., no., pp.7 pp., 
+		25-29 April 2006 doi: 10.1109/IPDPS.2006.1639692
+		URL: http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=1639692&isnumber=34366
+
+[K]	Vijayshankar Raman and Garret Swart. 2006. How to wring a table dry: 
+		entropy compression of relations and querying of compressed 
+		relations. In Proceedings of the 32nd international conference 
+		on Very large data bases (VLDB '06), Umeshwar Dayal, Khu-Yong Whang, 
+		David Lomet, Gustavo Alonso, Guy Lohman, Martin Kersten, Sang K. Cha, 
+		and Young-Kuk Kim (Eds.). VLDB Endowment 858-869.
+
+[K]  	Jacopo Urbani, Jason Maassen, and Henri Bal. 2010. Massive Semantic Web data 
+	       compression with MapReduce. In Proceedings of the 19th ACM International 
+	       Symposium on High Performance Distributed Computing (HPDC '10). ACM, 
+	       New York, NY, USA, 795-802. DOI=10.1145/1851476.1851591 
+	       http://doi.acm.org/10.1145/1851476.1851591	
 
 ===========================================================================
 
