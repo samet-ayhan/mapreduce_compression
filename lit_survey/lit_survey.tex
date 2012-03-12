@@ -33,12 +33,8 @@ is actually needed by the MapReduce task.
 \item Two techniques for compressing column files in a chunked manner, such that
 the SkipList deserialization scheme also avoids having to decompress a chunk if
 the values it contains are not needed.  These techniques make use of the lightweight,
-non-optimal LZO algorithm \cite{ref:lz77} \cite{ref:lz78} to do the compression of
+non-optimal LZO algorithm \cite{ref:lzo} to do the compression of
 individual chunks.
-
-% are these the right references for LZO???  I don't think so, yet I cannot
-% find a better one... -Greg
-
 \item An experimental analysis of the above techniques, in comparison with other
 commmonly-used storage formats and compression techniques.  In general, 
 \verb+ColumnInputFormat+ and the compression schemes presented here are
@@ -53,15 +49,150 @@ such claims were \emph{only} tested using the \verb+zlib+ compression library,
 which is an implementation of the Lempel-Ziv '77 algorithm \cite{ref:lz77}.
 
 \section{Background}
+
+We now present necessary background information and additional work
+relevant to the concepts presented in Floratou et al.  In this section,
+we focus on the MapReduce framework, data processing alternatives such
+as column-stores and parallel databases, and general data compression
+techniques.
+
 \subsection{MapReduce}
+
+\emph{(Samet?)}
+
 \subsection{Column-stores}
+
+\emph{(Samet?)}
+
 \subsection{Parallel Databases}
+
+\emph{(Dunno if we have anything to say here...)}
+
 \subsection{Compression Techniques}
 
+\emph{(Kishan, feel free to add)}
+
 \section{MapReduce Performance}
+
+By far, the most frequent complaint we've encountered regarding the MapReduce
+framework (and the Hadoop implementation, particularly) is that the performance
+of the framework is unacceptably slow \cite{ref:friends-or-foes}.  Many papers
+have been written detailing
+MapReduce efficiency concerns and how to fix them; after surveying the relevant literature,
+we believe that most approaches fit into one of four topics: improved performance reading
+data from HDFS into memory, better ways to lay the data out within files on disk,
+accessing data using an index rather than sequential scan, or reducing the
+amount of data read in using data compression.  We now consider each
+of these in detail.
+
 \subsection{Serialization and Data Format}
+
+In the 2010 paper \emph{MapReduce: A Flexible Data Processing Tool} \cite{ref:friends-or-foes-resp},
+authors Dean and Ghemawat responded to many of the criticisms of MapReduce inefficiency
+presented in \cite{ref:friends-or-foes}.  The authors immediately pointed out that all experiments
+in the Stonebraker et al. paper were conducted using raw text files as the underlying storage
+format.  This is inherently slow, as each file must be deserialized during parsing; the binary
+data read in will automatically be converted into an ASCII string in memory before anything can
+be done with it.  By contrast, most well-practiced users of MapReduce store their data in a binary
+format such as Google's Protocol Buffers.
+This allows mapper tasks to skip the stage of deserialization entirely, significantly
+improving the performance of the map phase.
+
+The Jiang et al. 2010 paper \emph{The Performance of MapReduce: An In-depth Study}
+\cite{ref:perf-study} conducted experiments to compare
+the load times of textual data with those of binary files in a variety of formats.
+The study found that binary file formats were indeed faster to read in, but that the
+improvement was less than would be expected.  The authors reasoned that most input formats
+parse input using immutable Java objects (such as Strings and Integers) for each object
+read in, and that the high CPU overhead of creating all
+these objects was to blame for such poor performance.  Further experimentation
+using mutable objects during parsing was able to improve the performance of the load phase
+by a factor of 10, compared to a meager 2x improvement from switching from text to binary
+data storage.
+
 \subsection{Data Layout}
+
+Many papers have examined the improvements that may be gained using a different
+data layout within input files.  These papers draw on experience gained from 
+the sphere of traditional databases, where it has been shown that column-oriented
+storage can significantly outperform row-oriented storage for
+certain types of queries \cite{ref:colstores}.  However, there are additional
+concerns that arise when this experience is applied to MapReduce; the penatly
+in a row-oriented store for having to access every attribute in a record is higher because
+these attributes must all be parsed and deserialized, even if they aren't used.
+On the other hand, partitioning data across columns is troublesome because 
+columns may not be shuffled onto the same map nodes, and so reconstructing
+a given record may require communication across the network to access attributes
+for all the relevant columns.
+
+Most attempts to resolve this issue draw on the \verb+PAX+ (Partition Attributes
+Across) file format \cite{ref:pax}.  \verb+PAX+ was a scheme put forward for
+column-stores to improve cache performance
+by striking a compromise between a pure row-store and a pure column-store.  Essentially, 
+relations are carved up into blocks, where each block is a contiguous group of
+records that will fit within a single page in memory.  Then, blocks are
+vertically partitioned and written to disk as a mini-column-store.  In this way, one
+gets the benefits of performing fewer I/Os to query a relation when only touching a
+few attributes, but cache performance is better when it comes time to reconstruct
+tuples, since the entire block (and therefore all necessary attributes) is already
+in cache.  This was experimentally shown to lead to speedups between 10-50\%,
+depending on the type of query.
+
+Facebook's \verb+RCFile+ \cite{ref:rcfile} and the Trojan layout proposed in
+\cite{ref:trojan-layout} both make use of a similar technique to improve performance
+in MapReduce.  \verb+RCFile+ applies the \verb+PAX+ scheme almost verbatim,
+but uses ``row groups'' (each the size of an HDFS block) instead of memory
+pages as the unit of column storage.  Since each HDFS block is stored atomically
+on a single map node, this resolves the problem of having to communicate over the
+network to reconstruct tuples, and successfully increases the performance of
+map tasks by about 15\%.
+
+The Trojan layout paper \cite{ref:trojan-layout} takes this a step further, suggesting
+that we can improve performance even more by vertically partitioning row groups into
+``column groups'' of various sizes.  For a relation $R$ with 5 attributes
+($R = (a, b, c, d, e)$), we could store $R$ as 5 distinct columns, or as a pair
+of column groups $(a, b)$ and $(c, d, e)$, or as a set of 3 groups, or as anything
+in between.  Since HDFS replicates data blocks anyway, we can precompute a couple
+of these column groupings which are optimal for the expected query workload, 
+and then store a different one in each replica.  By dynamically
+re-routing queries to use the column grouping most efficient for the query type,
+the authors observe a 3-5x speedup over \verb+PAX+ and other layouts.
+Of course, this pre-supposes that we know our query workload \emph{a priori}, which
+may be an unrealistic assumption in most cases.
+
+The Floratou et al. paper \cite{ref:floratou} also uses column-oriented storage,
+but deviates from prior work in that columns are stored contiguously across all
+relations, rather than only contiguously within row groups.  The \verb+ColumnInputFormat+
+modifies HDFS's block placement policy to ensure that column data for the same
+records does indeed end up on the same map node, so that no network communication
+is necessary to reconstruct tuples.
+
 \subsection{Indexing}
+
+The Dean and Ghemawat 2010 paper \cite{ref:friends-or-foes-resp} also responded
+to a previous criticism that MapReduce cannot make use of any indexing structures
+by pointing out that ``natural indicies'' in the structure of the format of input
+files can be exploited for improved performance.  For example, if a MapReduce
+task operates on log data and the logs files are named with the dates of their
+rollover, map tasks can discard data from old logs without having to read it 
+in first by simply examining filenames.  This proposal was also examined
+experimentally in \cite{ref:perf-study}, and it was confirmed that such
+natural indices could contribute a performance speedup of 3-5x.
+
+Hadoop++ \cite{ref:hadoop++} implemented a ``lightweight, non-invasive''
+technique for generating actual data indicies during data load and embedding
+them in input files.  These indices could then be utilized by customized
+\verb+InputFormat+ classes for faster access during the map phase.  It was
+shown that this technique could improve performance 5-20x, depending on
+the type of query.  Unfortunately, such techniques also incurred a 10x
+performance hit during data loading to actually build the index.
+
+While embedded indexing techniques remain an open area of research, we think
+that the quick-and-dirty nature of most MapReduce tasks makes it
+unlikely that the extra work to build an index will be seen as worthwhile
+in the common case.  However, exploiting natural indices in the input
+data is certainly a beneficial technique and can really help performance.
+
 \subsection{Data Compression}
 
 \section{Other Concerns}
@@ -72,24 +203,54 @@ which is an implementation of the Lempel-Ziv '77 algorithm \cite{ref:lz77}.
 
 \begin{thebibliography}{10}
 
+\bibitem{ref:pax} A. Ailamaki, D. DeWitt, M. D. Hill, and M. Skounakis.
+                Weaving relations for cache performance. In VLDB, pages
+                169–180, 2001.
+
 \bibitem{ref:floratou} Avrilia Floratou, Jignesh M. Patel, Eugene J. Shekita, and Sandeep
-	Tata. 2011. Column-oriented storage techniques for MapReduce.
-	Proc. VLDB Endow. 4, 7 (April 2011), 419-429.
+		Tata. 2011. Column-oriented storage techniques for MapReduce.
+		Proc. VLDB Endow. 4, 7 (April 2011), 419-429.
+
+\bibitem{ref:trojan-layout} Alekh Jindal, Jorge-Arnulfo Quiané-Ruiz, and Jens Dittrich. 2011.
+                Trojan data layouts: right shoes for a running elephant.
+                In Proceedings of the 2nd ACM Symposium on Cloud Computing
+                (SOCC '11). ACM, New York, NY, USA, Article 21, 14 pages.
+                DOI=10.1145/2038916.2038937 http://doi.acm.org/10.1145/2038916.2038937
+
+\bibitem{ref:colstores} D. Abadi, S. R. Madden, and N. Hachem. Column-Stores
+                vs. Row-Stores: How Different Are They Really? In
+                SIGMOD, pages 967–980, 2008.
+
+\bibitem{ref:perf-study} D. Jiang, B. C. Ooi, L. Shi, and S. Wu. The Performance of
+                MapReduce: An In-depth Study. PVLDB, 3(1):472–483,
+                2010.
 
 \bibitem{ref:lz77} Jacob Ziv and Abraham Lempel; A Universal Algorithm for Sequential
-        Data Compression, IEEE Transactions on Information Theory,
-        23(3), pp. 337–343, May 1977.
+        	Data Compression, IEEE Transactions on Information Theory,
+        	23(3), pp. 337–343, May 1977.
 
-\bibitem{ref:lz78} Jacob Ziv and Abraham Lempel; Compression of Individual Sequences
-        via Variable-Rate Coding, IEEE Transactions on Information
-        Theory, 24(5), pp. 530–536, September 1978.
+\bibitem{ref:friends-or-foes-resp} J. Dean and S. Ghemawat. MapReduce: A Flexible Data
+                Processing Tool. CACM, 53:72–77, January 2010.
+
+\bibitem{ref:hadoop++} J. Dittrich, J.-A. Quian-Ruiz, A. Jindal, Y. Kargin,
+                V. Setty, and J. Schad. Hadoop++: Making a Yellow
+                Elephant Run Like a Cheetah. PVLDB, 3(1):518–529, 2010.\
+
+\bibitem{ref:friends-or-foes} Michael Stonebraker, Daniel Abadi, David J. DeWitt, Sam Madden,
+                Erik Paulson, Andrew Pavlo, and Alexander Rasin. 2010.
+                MapReduce and parallel DBMSs: friends or foes?. Commun.
+                ACM 53, 1 (January 2010), 64-71. DOI=10.1145/1629175.1629197
+                http://doi.acm.org/10.1145/1629175.1629197
+
+\bibitem{ref:lzo} Oberhumer, M.F.X.J.: Lempel-ziv-oberhumer. http://www.oberhumer.com/
+		opensource/lzo (2009)
 
 \bibitem{ref:skiplist} W. Pugh. Skip Lists: A Probabilistic Alternative to
-        Balanced Trees. CACM, 33(6):668–676, 1990.
+        	Balanced Trees. CACM, 33(6):668–676, 1990.
 
 \bibitem{ref:rcfile} Y. He, R. Lee, Y. Huai, Z. Shao, N. Jain, X. Zhang, and
-        Z. Xu. RCFile: A Fast and Space-efficient Data Placement
-        Structure in MapReduce-based Warehouse Systems. In ICDE, 2011.
+        	Z. Xu. RCFile: A Fast and Space-efficient Data Placement
+        	Structure in MapReduce-based Warehouse Systems. In ICDE, 2011.
 
 \end{thebibliography}
 \end{document}
