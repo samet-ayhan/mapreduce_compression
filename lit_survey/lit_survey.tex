@@ -66,7 +66,7 @@ techniques.
 
 \subsection{Parallel Databases}
 
-\emph{(Dunno if we have anything to say here...)}
+\emph{(do we have anything to say here?)}
 
 \subsection{Compression Techniques}
 
@@ -195,12 +195,50 @@ data is certainly a beneficial technique and can really help performance.
 
 \subsection{Data Compression}
 
-\section{Other Concerns}
-\subsection{Energy Efficiency}
-\subsection{anything else i'm forgetting?}
+The final category for performance-boosting techniques involves compressing
+input data so that fewer I/Os are required to load everything into memory.
+Compression of table data is a standard and well-known technique for
+improving performance in both row-stores and column-stores \cite{ref:colstore-comp}.
+However, in the sphere of MapReduce this seems to be a largely unexplored
+direction of research.  Aside from the Floratou et al. paper, we were
+only able to find two papers which considered the implications of data
+compression in the MapReduce framework.
+
+The \verb+RCFile+ paper briefly mentions the use of a compression algorithm
+such as \verb+gzip+ to reduce the size of columns within a block, but does
+not go into substantial detail, nor consider the results of using other
+compression algorithms at all.
+
+The only paper we were able to find focusing on compression in MapReduce
+was a workshop submission from 2010 by Chen et al. \cite{ref:energy} on
+energy-efficiency tradeoffs for applying compression to input data.
+Essentially, the authors ran a series of experiments demonstrating that
+enabling Hadoop's built-in \verb+gzip+ and \verb+lzo+ compression options
+on input and output data files can shift a portion of the workload
+from I/O to CPU time.  Since CPU time is less costly in terms of energy
+consumption, the authors concluded that compression can be used to make
+MapReduce ``greener''.  However, the compression schemes built in to 
+Hadoop simply compress entire files before being written to HDFS, rather
+than doing anything particularly clever or insightful.
 
 \section{Next Steps}
 
+Because of the sparsity of work involving applying compression techniques
+to improve the performance of the MapReduce framework, we think this continues
+to be an interesting area of work with some potentially low-hanging fruit.
+We plan to continue along this line of inquiry by contacting the authors
+of Floratou et al. and trying to get ahold of their \verb+ColumnInputFormat+
+source code.  If successful, we plan to repeat their experiments, and then
+continue further by hooking in a variety of different compression schemes
+to see how performance is affected.  Of particular interest are Huffman
+\cite{ref:huffman} and arithmetic \cite{ref:arith} coding, \verb+LZO+,
+\verb+LZMA+, and \verb+bzip+.  We would also like to consider ways in which
+the benefits of compression could be increased through the use of
+appropriate chunking at layout schemes.  Hopefully this line of inquiry
+will be fruitful in terms of improving the performance of the MapReduce
+framework.
+
+{\small
 \begin{thebibliography}{10}
 
 \bibitem{ref:pax} A. Ailamaki, D. DeWitt, M. D. Hill, and M. Skounakis.
@@ -217,13 +255,26 @@ data is certainly a beneficial technique and can really help performance.
                 (SOCC '11). ACM, New York, NY, USA, Article 21, 14 pages.
                 DOI=10.1145/2038916.2038937 http://doi.acm.org/10.1145/2038916.2038937
 
+\bibitem{ref:colstore-comp} D. J. Abadi, S. Madden, and M. Ferreira. Integrating
+                Compression and Execution in Column-Oriented Database
+                Systems. In SIGMOD, pages 671–682, 2006.
+
 \bibitem{ref:colstores} D. Abadi, S. R. Madden, and N. Hachem. Column-Stores
                 vs. Row-Stores: How Different Are They Really? In
                 SIGMOD, pages 967–980, 2008.
 
+\bibitem{ref:huffman} Huffman, D. (1952). A Method for the Construction of Minimum-Redundancy Codes.
+	Proceedings of the IRE, 40(9), 1098-1101. Retrieved from
+	http://ieeexplore.ieee.org/lpdocs/epic03 /wrapper.htm?arnumber=4051119
+
 \bibitem{ref:perf-study} D. Jiang, B. C. Ooi, L. Shi, and S. Wu. The Performance of
                 MapReduce: An In-depth Study. PVLDB, 3(1):472–483,
                 2010.
+
+\bibitem{ref:arith} Ian H. Witten, Radford M. Neal, and John G. Cleary. 1987.
+                Arithmetic coding for data compression. Commun.
+                ACM 30, 6 (June 1987), 520-540. DOI=10.1145/214762.214771
+                http://doi.acm.org/10.1145/214762.214771
 
 \bibitem{ref:lz77} Jacob Ziv and Abraham Lempel; A Universal Algorithm for Sequential
         	Data Compression, IEEE Transactions on Information Theory,
@@ -248,9 +299,17 @@ data is certainly a beneficial technique and can really help performance.
 \bibitem{ref:skiplist} W. Pugh. Skip Lists: A Probabilistic Alternative to
         	Balanced Trees. CACM, 33(6):668–676, 1990.
 
+\bibitem{ref:energy} Yanpei Chen, Archana Ganapathi, and Randy H. Katz. 2010. To compress
+                or not to compress - compute vs. IO tradeoffs for mapreduce
+                energy efficiency. In Proceedings of the first ACM SIGCOMM
+                workshop on Green networking (Green Networking '10). ACM,
+                New York, NY, USA, 23-28. DOI=10.1145/1851290.1851296
+                http://doi.acm.org/10.1145/1851290.1851296
+
 \bibitem{ref:rcfile} Y. He, R. Lee, Y. Huai, Z. Shao, N. Jain, X. Zhang, and
         	Z. Xu. RCFile: A Fast and Space-efficient Data Placement
         	Structure in MapReduce-based Warehouse Systems. In ICDE, 2011.
 
 \end{thebibliography}
+}
 \end{document}
