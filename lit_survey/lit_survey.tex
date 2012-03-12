@@ -213,7 +213,7 @@ The only paper we were able to find focusing on compression in MapReduce
 was a workshop submission from 2010 by Chen et al. \cite{ref:energy} on
 energy-efficiency tradeoffs for applying compression to input data.
 Essentially, the authors ran a series of experiments demonstrating that
-enabling Hadoop's built-in \verb+gzip+ and \verb+lzo+ compression options
+enabling Hadoop's built-in \verb+gzip+ and LZO compression options
 on input and output data files can shift a portion of the workload
 from I/O to CPU time.  Since CPU time is less costly in terms of energy
 consumption, the authors concluded that compression can be used to make
@@ -231,8 +231,8 @@ of Floratou et al. and trying to get ahold of their \verb+ColumnInputFormat+
 source code.  If successful, we plan to repeat their experiments, and then
 continue further by hooking in a variety of different compression schemes
 to see how performance is affected.  Of particular interest are Huffman
-\cite{ref:huffman} and arithmetic \cite{ref:arith} coding, \verb+LZO+,
-\verb+LZMA+, and \verb+bzip+.  We would also like to consider ways in which
+\cite{ref:huffman} and arithmetic \cite{ref:arith} coding, LZO,
+LZMA, and \verb+bzip+.  We would also like to consider ways in which
 the benefits of compression could be increased through the use of
 appropriate chunking at layout schemes.  Hopefully this line of inquiry
 will be fruitful in terms of improving the performance of the MapReduce
