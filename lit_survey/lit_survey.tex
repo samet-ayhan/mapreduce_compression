@@ -138,7 +138,7 @@ tuples, since the entire block (and therefore all necessary attributes) is alrea
 in cache.  This was experimentally shown to lead to speedups between 10-50\%,
 depending on the type of query.
 
-Facebook's \verb+RCFile+ \cite{ref:rcfile} and the Trojan layout proposed in
+Facebook's \verb+RCFile+ and the Trojan layout proposed in
 \cite{ref:trojan-layout} both make use of a similar technique to improve performance
 in MapReduce.  \verb+RCFile+ applies the \verb+PAX+ scheme almost verbatim,
 but uses ``row groups'' (each the size of an HDFS block) instead of memory
@@ -147,7 +147,7 @@ on a single map node, this resolves the problem of having to communicate over th
 network to reconstruct tuples, and successfully increases the performance of
 map tasks by about 15\%.
 
-The Trojan layout paper \cite{ref:trojan-layout} takes this a step further, suggesting
+The Trojan layout paper takes this a step further, suggesting
 that we can improve performance even more by vertically partitioning row groups into
 ``column groups'' of various sizes.  For a relation $R$ with 5 attributes
 ($R = (a, b, c, d, e)$), we could store $R$ as 5 distinct columns, or as a pair
@@ -160,7 +160,7 @@ the authors observe a 3-5x speedup over \verb+PAX+ and other layouts.
 Of course, this pre-supposes that we know our query workload \emph{a priori}, which
 may be an unrealistic assumption in most cases.
 
-The Floratou et al. paper \cite{ref:floratou} also uses column-oriented storage,
+The Floratou et al. paper also uses column-oriented storage,
 but deviates from prior work in that columns are stored contiguously across all
 relations, rather than only contiguously within row groups.  The \verb+ColumnInputFormat+
 modifies HDFS's block placement policy to ensure that column data for the same
@@ -169,7 +169,7 @@ is necessary to reconstruct tuples.
 
 \subsection{Indexing}
 
-The Dean and Ghemawat 2010 paper \cite{ref:friends-or-foes-resp} also responded
+The Dean and Ghemawat 2010 paper also responded
 to a previous criticism that MapReduce cannot make use of any indexing structures
 by pointing out that ``natural indicies'' in the structure of the format of input
 files can be exploited for improved performance.  For example, if a MapReduce
