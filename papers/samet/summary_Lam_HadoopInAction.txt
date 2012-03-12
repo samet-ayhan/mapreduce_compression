@@ -1,0 +1,38 @@
+Hadoop is an open source framework implementing the MapReduce algorithm behind Google's approach to querying the distributed data sets that constitute the internet.
+
+What makes Hadoop better than standard relational databases?
+- One reason is that SQL (structured query language) is by design targeted at structured data. Many of Hadoop’s initial applications deal with unstructured data such as text. From this perspective Hadoop provides a more general paradigm than SQL. For working only with structured data, the comparison is more nuanced. In principle, SQL and Hadoop can be complementary, as SQL is a query language which can be implemented on top of Hadoop as the execution engine. But in practice, SQL databases tend to refer to a whole set of legacy technologies.
+- Scaling commercial relational databases is expensive. Their design is more friendly to scaling up. To run a bigger database you need to buy a bigger machine. Whereas Hadoop is designed to be a scale-out architecture operating on a cluster of commodity PC machines. Adding more resources means adding more machines to the Hadoop cluster. 
+- A fundamental tenet of relational databases is that data resides in tables having relational structure defined by a schema. Although the relational model has great formal properties, many modern applications deal with data types that don’t fit well into this model. Text documents, images, and XML files are popular examples. Also, large data sets are often unstructured or semistructured. Hadoop uses key/value pairs as its basic data unit, which is flexible enough to work with the less-structured data types. In Hadoop, data can originate in any form, but it eventually transforms into (key/value)
+pairs for the processing functions to work on.
+- SQL is fundamentally a high-level declarative language. You query data by stating the result you want and let the database engine figure out how to derive it. Under MapReduce you specify the actual steps in processing the data, which is more analogous to an execution plan for a SQL engine. Under SQL you have query statements; under MapReduce you have scripts and codes. MapReduce allows you to process data in a more general fashion than SQL queries. 
+- Hadoop is designed for offline processing and analysis of large-scale data. It doesn’t work for random reading and writing of a few records, which is the type of load for online transaction processing. In fact, as of this writing (and in the foreseeable future), Hadoop is best used as a write-once, read-many-times type of data store. In this aspect it’s similar to data warehouses in the SQL world.
+
+MapReduce programs are executed in two main phases, called mapping and reducing. Each phase is defined by a data processing function, and these functions are called mapper and reducer, respectively. In the mapping phase, MapReduce takes the input data and feeds each data element to the mapper. In the reducing phase, the reducer processes all the outputs from the mapper and arrives at a final result. In simple terms, the mapper is meant to filter and transform the input into something that the reducer can aggregate over.
+
+MapReduce uses lists and (key/value) pairs as its main data primitives. The keys and values are often integers or strings but can also be dummy values to be ignored or complex object types. 
+
+In the MapReduce framework you write applications by specifying the mapper and reducer. Let’s look at the complete data flow:
+
+1. The input to your application must be structured as a list of (key/value) pairs, list(<k1, v1>). This input format may seem open-ended but is often quite simple in practice. The input format for processing multiple files is usually list(<String filename, String file_content>). The input format for
+processing one large file, such as a log file, is list(<Integer line_number, String log_event>).
+2. The list of (key/value) pairs is broken up and each individual (key/value) pair, <k1, v1>, is processed by calling the map function of the mapper. In practice, the key k1 is often ignored by the mapper. The mapper transforms each <k1, v1> pair into a list of <k2, v2> pairs. The details of this transformation largely determine what the MapReduce program does. Note that the (key/value) pairs are processed in arbitrary order. The transformation must be self-contained in that its output is dependent only on one single (key/value) pair.
+3. The output of all the mappers are (conceptually) aggregated into one giant list of <k2, v2> pairs. All pairs sharing the same k2 are grouped together into a new (key/value) pair, <k2, list(v2)>. The framework asks the reducer to process each one of these aggregated (key/value) pairs individually.
+
+On a fully configured cluster, “running Hadoop” means running a set of daemons, or resident programs, on the different servers in your network. These daemons have specific roles; some exist only on one server, some exist across multiple servers. The daemons include
+- NameNode
+- DataNode
+- Secondary NameNode
+- JobTracker
+- TaskTracker
+
+HDFS is a filesystem designed for large-scale distributed data processing under frameworks such as MapReduce.
+
+This book provides a deep insight as to what Hadoop is, how it is installed and configured and how the MR libraries are used inside of user programs. It uses various examples with sample code and makes it very easy to learn and implement. Due to fact that we will be making modifications to Hadoop source code to enable compression on it, understanding MR framework inside of Hadoop is key. So, this book is very important for our research. 
+
+
+
+
+
+
+

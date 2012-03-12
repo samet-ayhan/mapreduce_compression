@@ -1,0 +1,20 @@
+The paper presents column-oriented database systems in general. Column-stores store each database table column separately, with attribute values belonging to the same column stored contiguously, compressed, and densely packed, as opposed to traditional database systems that store entire records one after the other. Reading a subset of a table’s columns becomes faster, at the potential expense of excessive disk-head seeking from column to column for scattered reads or updates. 
+
+A columnar data layout determines much of the basic architectural design in a column-store. Each column is stored contiguously on a separate location on disk, typically using large disk pages to amortize disk head seeks when scanning multiple columns on hard drives. To improve read efficiency, columnar values are typically densely packed, foregoing the explicit storage of record IDs, and using light-weight compression schemes whenever possible. Column scan operators differ from row-scanners in that they are responsible for translating value position information into disk locations and for combining and reconstructing (when needed) partial or entire tuples out of different columns. Join operators can either rely on column-scanners for receiving reconstructed tuples, or they can operate directly on columns by first computing a join index and then fetching qualifying values.
+
+One of the most-often cited advantages of column-stores is data compression. The intuitive argument for why column-stores compress data well is that compression algorithms perform better on data with low information entropy (high data value locality). 
+
+Two of the most-often cited disadvantages of column-stores are write operations and tuple construction. Write operations are 
+generally considered problematic for two reasons: 
+- inserted tuples have to be broken up into their component attributes and each attribute must be written separately, and 
+- the dense packed data layout makes moving tuples within a page nearly impossible. 
+
+Some of the techniques to mitigate these fundamental write issues are listed below:
+- in-memory buffering, 
+- tuple moving, and 
+- partition-merging
+
+This is more than a paper, a tutorial and is a very good resource to understand the column-stores. It would be very useful for our research due to fact that it implements column-store with compression. Would compression techniques still be useful if we kept the regular Hadoop data structure of list of key, values pairs or should we implement columnar aproach to convert Hadoop data structure to C-store first in order to take fully advantage of compression? This is something to investigate some time.
+
+
+

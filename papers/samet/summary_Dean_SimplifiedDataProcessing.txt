@@ -1,0 +1,19 @@
+MapReduce (MR) is a new programming framework and implementation model for processing large data sets. The model uses a map function to process key/value pairs and generate a set of intermediate key/value pairs. The MapReduce library groups together all intermediate values associated with the same intermediate key and passes them to the reduce function. The reduce function accepts an intermediate key and a set of values for that key and merges these intermediate values to form a smaller set of values. 
+
+These programs can be parallelized and executed on large cluster of commodity hardware resulting in highly scalable systems. 
+
+The experiment points out that:
+- The MR library fir splits the input files into M pieces (16-64MB)
+- Master is the node where all tasks are assigned by. These are map and reduce tasks distributed by the master to idle workers.
+- A worker reads the incoming split, parses key/value pairs out and passes each pair to the user defined map function. Intermediate key/value pairs are buffered in memory.
+- Periodcially these buffered data are written to disk. The locations of data are passed back to the master so that it forwards them to the reduce workers.
+- Reduce worker is notified by the master and the worker uses RPC to read the data in. It sorts the data by intermediate keys so that all accurences of the same key are grouped together.
+- Once the sorted keys are iterated through by the reduce worker, the key and corresponding set of intermediate values are passed to reduce function. The output of reduce function is appended to a final output file for this reduce partition.
+- When all MR tasks have been completed, MR call in the user program returns back to the user code.
+
+The authors present a performance experiment where they test the system with a number of tasks (sort, grep, etc.). They notice that the input rate is higher than the shuffle rate and the output rate. They say that the reason is because most data is read from local disk. Also, they note that the shuffle rate is higher than the output rate because the output phase writes two copies of the sorted data. The reason why two copies are written is because of reliability and availability requirements.
+
+This is the first paper introducing MR framework with some detail and also explaining some of the performance issues. Hence, this is very much important relevant paper to our research.
+
+
+

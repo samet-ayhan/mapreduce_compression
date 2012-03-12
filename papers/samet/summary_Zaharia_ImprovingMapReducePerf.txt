@@ -1,0 +1,7 @@
+Hadoop's performance is tied to its task scheduler, which assumes that cluster nodes are homogeneous and tasks make progress linearly. Based on this assumption, task scheduler decides when to re-execute tasks that appear to be stragglers. In practice, this assumption doesn't hold. Zaharia et al. shows that Hadoop's scheduler can cause severe performance degradation in heterogeneous environments. They experiment this Amazon's EC2 and come up with a new scheduling algorithm: Longest Approximate Time to End (LATE). They claim that this algorithm can improve Hadoop response time by a factor of 2.
+
+The authors identify a flaw in Hadoop with regard to threshold-based scheduling algorithm. So, they end up implementing a new scheduling algorithm, LATE, that uses estimated finish times to speculatively execute the tasks that hurt the response time the most. According to the authors, LATE performs significantly better than Hadoop’s default speculative execution algorithm in real workloads on Amazon’s Elastic Compute Cloud.
+
+This paper is relevant to our research if we end up exploring the means of improving Hadoop performance via task scheduler.
+
+

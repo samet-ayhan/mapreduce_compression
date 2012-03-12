@@ -1,0 +1,25 @@
+The paper presents the design of a read-optimized RDBMS, which contrasts write-optimized DBMSs. Obviously the design of read-optimized RDBMS is different than write-optimized RDBMS and here is a list of differences:
+- Storage of data is by column rather than by row
+- Coding and packing of objects into storage including main memory during query processing, resulting in more economical storage representation
+- Storing an overlapping collection of column-oriented projections, rather than tables and indexes
+- High availability and snapshot isolation for read-only transactions and
+- Extensive use of bitmap indexs to complement B-tree structures
+
+In most relational systems attributes, in C-Store tables can form a unique primary key or be a foreign key that references a primary key in another table. The C-Store query language is assumed to be SQL, with standard SQL semantics. Data in C-Store is not physically stored using this logical data model. Whereas most row stores implement physical tables directly and then add various indexes to speed access, C-Store implements only projections. Specifically, a C-Store projection is anchored on a given logical table, T, and contains one or more attributes from this table. In addition, a projection can contain any number of other attributes from other tables, as long as there is a sequence of n:1 relationships from the anchor table to the table containing an attribute. To form a projection, attributes of interest from T are projected, retaining any duplicate rows, and the appropriate sequence of value-based foreign-key joins is performed to obtain the attributes from the non-anchor table(s).
+
+RS is a read-optimized column store. Hence any segment of any projection is broken into its constituent columns, and each column is stored in order of the sort key for the projection. The storage key for each tuple in RS is the ordinal number of the record in the segment. This storage key is not stored but calculated as needed.
+
+In order to avoid writing two optimizers, WS is also a column store and implements the identical physical DBMS design as RS. Hence, the same projections and join indexes are present in WS. However, the storage representation is drastically different because WS must be efficiently updatable transactionally.
+
+The storage management issue is the allocation of segments to nodes in a grid system; C-Store will perform this operation automatically using a storage allocator. It seems clear that all columns in a single segment of a projection should be co-located. As noted above, join indexes should be co-located with their “sender” segments. Also, each WS segment will be co-located with the RS segments that contain the same key range.
+
+An insert is represented as a collection of new objects in WS, one per column per projection, plus the sort key data structure. All inserts corresponding to a single logical record have the same storage key. The storage key is allocated at the site where the update is received. To prevent C-Store nodes from needing to synchronize with each other to assign storage keys, each node maintains a locally unique counter to which it appends its local site id to generate a globally unique storage key.
+
+The job of the tuple mover is to move blocks of tuples in a WS segment to the corresponding RS segment, updating any join indexes in the process. It operates as a background task looking for worthy segment pairs. When it finds one, it performs a merge-out process, MOP on this (RS, WS) segment pair.
+
+This is a pretty detailed paper on a design of a column-store database. Although the implementation was not complete during the publishing of this paper, it seems that the product made its way out. There is another paper on C-Store, which we are reviewing. We should definetely take advantage of C-Store offerings and the way they optimize the performance. We need to weigh the amount of implementation versus the benefits we will get out of the conversion process (Hadoop list of key,value transformation to column store db).
+
+
+
+
+
