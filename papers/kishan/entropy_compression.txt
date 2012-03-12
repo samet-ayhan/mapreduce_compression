@@ -1,0 +1,29 @@
+Why Compression
+- Data movement is s major bottleneck.
+- Data processing involve data being moved from a disk, I/O network, main memory buffer pool and few levels of processor cache
+  until it is loaded to processor registers finally for processing.
+- Even with parallelism and hadware based threading, quality of processing still depends on the memory and I/O not processor speed.
+
+Solution
+- Use compression to alleviate data movement bottleneck (IBM's DB2 - individual records are compressed using dictionary scheme)
+- Dictionary scheme reduce I/O but decompression can increase CPU cost. Especially for large dictionaries that doesn't fit in cache.
+- Domain coding is another solution - values from a domain are coded into a tighter representation and queries run agaisnt coded 
+  representation.
+- Domain coding poorly exploits skew, correlation, and lack of tuple order redundance in a relation.
+- One technique of column store is to delta code the sort column of each table.
+
+Approach
+- Mix of coulumn and row (tuple) coding
+- Columns are coded using huffman coding to exploit skew in value frequencies. This will result in variable length field codes
+- Field codes are then concatenated to form tuplecodes. These are then sorted and delta coded to take advantage of the lack of order
+  with in a relation.
+- Domain-specific transformations are allowed to be applied to columns before huffman coding (i.e. text compression for strings).
+- New coding scheme called csvzip can obtain compression factors from 7 to 40 substantially better than gzip.
+
+Issues
+- Row or page compression is simpler to implement but it worsen memory and cache behavior due to decompression, eventhough it
+  reduces I/O costs. Some studies suggest CPU cost also high for decompression.
+- huffman codeing is substantially space efficient than domain coding fro skewed domains but its variable length codes are harder
+  to tokenize.
+- Entropy coding currently examines only compression which produce far better results than huffman coding or delta coding alone. 
+  But decompression of the encoding is not fully tested and experimented. Instead assumptions are made to query compressed data. 

@@ -1,0 +1,50 @@
+Lossless compression
+- There is a growing need for computational and storage of several scientific applications 
+  that deployed in extreme-scale parallel machines (IBM Blue Gene/L)
+- These machines produce large amount of system logs due to spatiality.
+- Storing and transferring large volumes of such logs is very challenging.
+- Common compression techniques are not optimal for such complex and enormous tasks.
+- Address accessibility, Reliability, and Serviceability issues of cluster architectures.
+- Compress log data sent across network to reduce bandwidth and save storage space.
+
+Solutions
+- Redundant log filtering is implemented to remove redundant log records is a solution to
+  handle large volume of log data.
+- Event compression and decompression techniques requires no analyzing the characteristics
+  of events prior to archive is another solution.
+- Lossless compression facilitates storage, archiving, and network transfer of log data which
+  can save lot of storage and network bandwidth.
+- 35.5% improvement in compression ratio and 76.6% improvement in compression time over bzip2
+  and 21% ratio and 72.5% time over LZMA level 9 compression by 7zip.
+
+
+Approach
+- Lossless compression techniques has zero information loss. Passing compressed data through 
+  decompression reproduce the original data
+- Eventhough general purpose compressions are good specific compression schemes for large scale 
+  cluster logs can leverage performance.
+- Implement a compression pipeline with different compression algorithms used in each stage.
+- Pick and choose best compressor for each task from the set and perform each stage compression.
+- Use trends in logs to design custom compression algorithm.
+- Modified incremental encoding for ordered texts. (variant of delta encoding).
+
+
+
+
+Issues
+- Filtering can loose upto 99% of the original data from the logs. Some records cannot be 
+  removed until archiving and propoer analysis is needed for filtering.
+- Compression ratio of standalone custom encoding is low. BUT using in combine with other compression
+  utilities gives 28.3% improvement in ratio and 43.4% improvement in compression time.
+- Decompression was performed offline. And shows performance on some combinations only.
+
+
+Notes
+---> gZip - based on a variant of LZ77 algorithm. Literals and references are coded using 
+  	    huffman coding. 
+---> Bzip2 - use Burrows-Wheeler block sorting text compression algorithm and huffman coding.
+    	     Generally better than standard LZ77/LZ78 compressors. Achieve PPM family performance
+---> 7Zip - Supports number of formats. LZMA, ZIP, CAB, ARJ, LZH, GZIP, BZIP2, Z, TAR, CPIO, RPM, 
+	    and DEB. Compress scheme is LZMA (Lampalle Ziv Markov Chain Algorithm)
+---> PPM - Use Prediction Partial Matching. Statistical data compression based on context modeling
+	   and prediction.

@@ -1,0 +1,44 @@
+Web data compression
+- Semantic web consists large amount of statements made of terms that are either URIs or literals.
+- Terms consists of long strings. This requires compression to save sapce and increase performance.
+- Most often used technique in this domain is dictionary encoding - typically gives 1:6 or 1:8 
+  compression ratio.
+
+
+Solution
+- MapReduce programming model based compression and decompression technique.
+- Performance scales linearly.
+- Gives the ability to build a large dictionary.
+- Flexibility to handle load balancing with sampling and caching.
+
+
+Approach
+- Build the dictionary but compression and decompression is handled through MapReduce to reduce work.
+- If the dictironary stored in external DB, we can minimize the number of queries exploiting the 
+  sorting ability of MapReduce. 
+- This allows to query the external DB only once per term compared to many in conventional approach.
+- However, external storage can cause performance lag in load balancing. Therefore, approach is taken 
+  to store internally using caching (most common resources) and sampling (for better load balancing)
+- To decompress a join is performed between compressed statement and dictionary table. Caching the 
+  dictionary table for better load balancing is carried out for decompression.
+
+
+Issues
+- Semantic web data is steadily growing and compressing large amounts of data is time consuming.
+- Centralized approach is not feasible due to need of large memory to store the dictionary.
+- No distributed approach exist as of now.
+- Due to the size of the dictionary that can be produced by URIs, very unlikely it will fit in memory. 
+  If dictionary did not fit in memory, accessing it through storage is very costly due to seeks and I/O
+  costs.
+- Though caching can help to increase the performance, only few terms will benifit from such approach.
+  Majority of the terms occur very rarely. This makes it hard to cache and gain performance.
+- Compression is order of magnitude faster compared to decompression in MapReduce framework.
+- Common bottleneck due to disk I/O is dominate even within this framework.
+
+Notes
+- Target domain is for large dictionaries. Extending the approach to other domains is necessary to 
+  make better conclusions.
+- 
+
+ 
+

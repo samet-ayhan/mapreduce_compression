@@ -1,0 +1,37 @@
+Compression of Data tables
+- Data tables can be represented as a matrix.
+- Representing this way allows arbitary permutations of rows and columns with out loss
+  of information.
+- It is possible to use such property to improve compressibility of data tables by orderings
+  of rows or columns.
+
+
+Approach
+- Algorithm for lossless compression of tables with numeric attributes based on row ordering.
+- Find permutations of table rows that maximize compression of the permuted table.
+- Differential predictive coding is used for compression.
+- Good table orderings can be approximated with Laplace or Gaussian distribution.
+- Convergence to a local minimum is achieved by an iterative process, stating from an initial 
+  guess.
+- For larger application domains, a fast recursive partitioning Traveling salesman problem (TSP)
+  heuristics  are used with O(NlogN) time and O(N) space complexity.
+- It starts by building a binary tree whose leafs are individual data points by recursively 
+  applying clustering algorithm at each node. It finishes by reordering the tree nodes by a 
+  dynamic programming algorithm.
+
+
+Solution
+- In Gaussian approximation, optimal permutation is the one that minimize the sum of weighted 
+  squared distances.
+- In Laplace approximation, optimal permutation is the one that minimize the weighted city block
+  distances.
+
+Issues
+- Optimal only in very specific applications - "ordering is useful for compression of moderately 
+  large to large tables with intrinsic dimensionality below 20 and with attributes represented 
+  with low to moderate precision"
+
+
+Notes
+- Not directly applicable. But it is a good lossless compression algorithm. We can show that very
+  application tailored algorithms exist in the scope of the project due to complexity.

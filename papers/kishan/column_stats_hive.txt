@@ -1,0 +1,33 @@
+Column statistics in Hive
+- Collecting metadata on the data stored in the database is essential.
+- Hive is a data warehousing solution implemented on top of Hadoop MapReduce framework.
+- Hadoop is identified as one of the better framework to handle batch processing.
+- Using Hive it is possible to generate tables and partitions where data is stored.
+- A better approach to increase performance is by using statistics that describes data stored 
+  in database system.
+- Column level statistics are helpful to determine order of joins or to evaluate possible 
+  values or map reduce programs.
+
+Solution
+- Implement column statistics in Hive for performance insrease.
+- Extend Hive MetaStore which stores metadata that has been extracted on the column level of
+  the user database.
+- Collecting metadata on column level gives more accuracy.
+
+
+Issues
+- Metadata collection impose extra overhead for the database.
+- Column level statistics gives more accuracy but very extensive compared to row level statistics.
+- Collecting data on the column level can be very storage intensive.
+- It is a tradeoff between accurancy and storage costs.
+
+Approach
+- A separate extension in form of additional MetaStore table that stores information on each column 
+  associated with a specific table.
+- Collect number of distinct values, number of null values, minimum values, maximum values, highest 
+  frequency value.
+
+Notes
+- This paper does not give anything directly that applies to our project. We can use this as an
+  explicit reference if needed to show that as well as column store implementation, gathering 
+  column statistics in terms of metadata is necessary and can be implemented in MapReduce framework.

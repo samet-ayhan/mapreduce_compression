@@ -1,0 +1,25 @@
+Universal algorithm/Sequential data compression
+- Data is subject to various structural regularities or subject to certain contraisnts.
+- Theredfore storage and time-saving optimizations are needed for handling data.
+- For an arbitary data source, identifying these contraints and regularities is the 
+  primary task.
+- Universal coding is needed if no prior knowledge of the source characteristics are avaialble.
+
+
+Approach
+- Encode future segments of the source-output via maximal length copying from a buffer that 
+  contains the recent past output.
+- Parse strings of symbols from a finite alphabet into substrings or words that do not exceed 
+  pre-defined length.
+
+
+Issues
+- Universal coding requires a larger working memory space and employing performance criteria
+  that fit wide variety of sources.
+- Susceptibility to error propagation in the event of a channel error.
+
+Solution
+- Encoder designed to operate over a prescribed compression range performs as well as a one 
+  designed to match a specific compression ratio.
+- For a given complexity (codeword length) the compression efficiency is comparable to that of
+  an optimal variable to block coding.
