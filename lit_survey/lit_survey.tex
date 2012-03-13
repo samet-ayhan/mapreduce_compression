@@ -2,7 +2,7 @@
 \usepackage{fullpage}
 
 \title{CMSC724: Literature Survey \\
-Applying Compression Techniques in MapReduce}
+Improving MapReduce Performance Using Data Compression}
 
 \author{Greg Benjamin, Samet Ayhan, Kishan Sudusinghe \\
 University of Maryland, College Park}
@@ -69,6 +69,51 @@ techniques.
 \emph{(do we have anything to say here?)}
 
 \subsection{Compression Techniques}
+
+While surveying the relevant literature, we discovered several
+compression techniques which we consider interesting in the context
+of the problem described by Floratou et al.
+
+In a 2007 study, Samara et al. \cite{ref:comp-study} examined and compared
+six lossless compression methods in the context of the storage and
+transmission of serialzed Java objects.  In particular, the study
+explored the tradeoff between high compression
+ratio and fast compression/decompression performance.  According to Samara
+et al., LZMA and \verb+bzip2+ strike the best compromise between these
+two metrics, which should make them particularly useful for improving
+performance in MapReduce according to the Floratou paper.
+
+Nicolae 2010 \cite{ref:cloud-comp} performed a similar analysis of various
+compression techniques, here in the context of transparent compression
+for cloud-based storage services.  Performance of the algorithms
+was considered, but the primary metric here was compression ratio, as the
+paper was motivated by attempting to reduce storage fees in the commercial
+cloud.  The implementation of a sampling algorithm to dynamically decide whether
+to compress data or not (based on the entropy of what was being stored) was also
+discussed.  The paper focused particularly on LZO and \verb+bzip+,
+and concluded that both were appropriate in such a context due to their
+relatively light CPU overheads, which again should make both viable candidates
+for our consideration.
+
+The technique we consider to have the most potential, however, is arithmetic
+coding.  As explained in a 1987 paper by Witten et al. \cite{ref:arith}, this
+technique is a lightweight dictionary encoding scheme with better performance
+than Huffman coding \cite{ref:huffman} in both CPU overhead and compression ratio. 
+Like all compression algorithms, the goal is to transmit more common symbols
+with fewer bits than less probable ones.  Arithmetic coding accomplishes
+this by mapping symbols to a subset of the interval $ [0, 1) $.  The encoded
+value of a message starts as the entire interval, but is then
+reduced to a subset thereof by each successive symbol in the message.
+Decoding of an interval works by repeating the process, reading off (in order)
+the symbols that reduce the starting range to one which contains the encoded
+interval, and then reducing the starting range accordingly, until the two
+converge.  This scheme is lossless and encodes an entire message as a single
+interval, unlike other dictionary coding schemes, which work on a
+symbol-by-symbol basis.  We think this is especially applicable to the
+work done by Floratou et al., both because of the lightweightness of the
+scheme, but also because such a scheme should operate well on chunks of data
+at a time, allowing us to maximize the gains of using a SkipList representation
+to store data.
 
 \emph{(Kishan, feel free to add)}
 
@@ -231,7 +276,7 @@ of Floratou et al. and trying to get ahold of their \verb+ColumnInputFormat+
 source code.  If successful, we plan to repeat their experiments, and then
 continue further by hooking in a variety of different compression schemes
 to see how performance is affected.  Of particular interest are Huffman
-\cite{ref:huffman} and arithmetic \cite{ref:arith} coding, LZO,
+and arithmetic coding, LZO,
 LZMA, and \verb+bzip+.  We would also like to consider ways in which
 the benefits of compression could be increased through the use of
 appropriate chunking at layout schemes.  Hopefully this line of inquiry
@@ -255,6 +300,13 @@ framework.
                 (SOCC '11). ACM, New York, NY, USA, Article 21, 14 pages.
                 DOI=10.1145/2038916.2038937 http://doi.acm.org/10.1145/2038916.2038937
 
+\bibitem{ref:cloud-comp} Bogdan Nicolae. 2010. High throughput data-compression for cloud
+                storage. In Proceedings of the Third international
+                conference on Data management in grid and peer-to-peer
+                systems (Globe'10), Abdelkader Hameurlain, Franck Morvan,
+                and A. Min Tjoa (Eds.). Springer-Verlag, Berlin,
+                Heidelberg, 1-12.
+
 \bibitem{ref:colstore-comp} D. J. Abadi, S. Madden, and M. Ferreira. Integrating
                 Compression and Execution in Column-Oriented Database
                 Systems. In SIGMOD, pages 671–682, 2006.
@@ -263,9 +315,16 @@ framework.
                 vs. Row-Stores: How Different Are They Really? In
                 SIGMOD, pages 967–980, 2008.
 
+\bibitem{ref:comp-study} Ghassan Samara, Ahmad El-Halabi, and Jalal Kawash. 2007. Compressing
+                serialized java objects: a comparative analysis of six
+                compression methods. In Proceedings of the third conference
+                on IASTED International Conference: Advances in Computer
+                Science and Technology (ACST'07). ACTA Press, Anaheim, CA,
+                USA, 427-431.
+
 \bibitem{ref:huffman} Huffman, D. (1952). A Method for the Construction of Minimum-Redundancy Codes.
-	Proceedings of the IRE, 40(9), 1098-1101. Retrieved from
-	http://ieeexplore.ieee.org/lpdocs/epic03 /wrapper.htm?arnumber=4051119
+		Proceedings of the IRE, 40(9), 1098-1101. Retrieved from
+		http://ieeexplore.ieee.org/lpdocs/epic03 /wrapper.htm?arnumber=4051119
 
 \bibitem{ref:perf-study} D. Jiang, B. C. Ooi, L. Shi, and S. Wu. The Performance of
                 MapReduce: An In-depth Study. PVLDB, 3(1):472–483,
