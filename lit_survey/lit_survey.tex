@@ -64,9 +64,6 @@ techniques.
 
 \emph{(Samet?)}
 
-\subsection{Parallel Databases}
-
-\emph{(do we have anything to say here?)}
 
 \subsection{Compression Techniques}
 
@@ -95,6 +92,18 @@ and concluded that both were appropriate in such a context due to their
 relatively light CPU overheads, which again should make both viable candidates
 for our consideration.
 
+The study conducted by Balakrishnan et al., in 2006 \cite{ref:lossless-cluster},
+focused heavily on lossless compression techniques targetting scientific applications
+deployed in extreme-scale parallel machines (i.e, IBM Blue Gene/L). However, 
+compression was primarily on large amount of log data. The study found that lossless
+compression facilitates storage, archiving, and network transfer of data saving 
+storage and netwrok bandwidth. Experimental results showed 35.5% improvement in 
+compression ratio and 76.6% improvement in compression time over bzip2 and 21% 
+improvement over compression ratio and 72.5% compression time over LZMA level 9 
+compression by 7zip. Teh approach defines a compression pipeline with different 
+compression algorithms used in each stage. Best compression technique for each 
+stage is chosen from a set of compression utilities.
+
 The technique we consider to have the most potential, however, is arithmetic
 coding.  As explained in a 1987 paper by Witten et al. \cite{ref:arith}, this
 technique is a lightweight dictionary encoding scheme with better performance
@@ -115,7 +124,6 @@ scheme, but also because such a scheme should operate well on chunks of data
 at a time, allowing us to maximize the gains of using a SkipList representation
 to store data.
 
-\emph{(Kishan, feel free to add)}
 
 \section{MapReduce Performance}
 
@@ -254,7 +262,22 @@ such as \verb+gzip+ to reduce the size of columns within a block, but does
 not go into substantial detail, nor consider the results of using other
 compression algorithms at all.
 
-The only paper we were able to find focusing on compression in MapReduce
+
+Although not much of work is performed within the Hadoop MapReduce framework,
+a study by Jacopo et. al \cite{web-compression} introduce a MapReduce programming 
+model based compression and decompression technique that have linearly scaled 
+performance gains. MapReduce framework handled compression/decompression to reduce
+the amount of work done but the dictionary scheme is used to store data. However, 
+dictionary scheme introduced had many failures as centralized approach is not 
+feasible due to need of large memory to store the dictionary. If dictionary did not 
+fit in memory, accessing it through storage is very costly due to seeks and I/O costs.
+Though caching can help to increase the performance, only few terms will benifit from 
+such approach. Majority of the terms occur very rarely hence it hard to cache and 
+gain performance. Compression is order of magnitude faster compared to decompression 
+in MapReduce framework promising improvements with possibly better technique than
+dictionary.
+
+Another paper we were able to find focusing on compression in MapReduce
 was a workshop submission from 2010 by Chen et al. \cite{ref:energy} on
 energy-efficiency tradeoffs for applying compression to input data.
 Essentially, the authors ran a series of experiments demonstrating that
