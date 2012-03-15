@@ -104,6 +104,18 @@ compression by 7zip. Teh approach defines a compression pipeline with different
 compression algorithms used in each stage. Best compression technique for each 
 stage is chosen from a set of compression utilities.
 
+Entropy compression is another technique widely looked at in the literature 
+to alleviate data movement bottleneck (i.e, IBM's DB2 - individual records are 
+compressed using dictionary scheme). Study by Vijayshankar et. al 
+\cite{ref:entropy-compression} takes an approach based on a mix of coulumn and 
+row (tuple) coding. Columns are coded using huffman coding to exploit skew in 
+value frequencies that will result in variable length field codes. Field codes 
+are then concatenated to form tuplecodes and then sorted and delta coded to take 
+advantage of the lack of order within a relation. However, there exist many 
+issues with the proposed approach. Row or page compression was simpler to implement 
+but it worsened memory and cache behavior due to decompression, eventhough it 
+reduces I/O costs. Experimental studies also suggest CPU cost is high for decompression.
+
 The technique we consider to have the most potential, however, is arithmetic
 coding.  As explained in a 1987 paper by Witten et al. \cite{ref:arith}, this
 technique is a lightweight dictionary encoding scheme with better performance
