@@ -11,10 +11,27 @@ University of Maryland, College Park}
 \begin{document}
 \maketitle
 
+\section{Introduction}
+
+Although MapReduce provides programmers with tools and utilities to accomplish their parallel
+computing needs with large amounts of data, performance has reportedly been a bottleneck.
+Much recent work comparing the performance of MapReduce with parallel databases has concluded
+that many problems encountered by MapReduce users may be overcome by
+applying techniques learned from over three decades of research on parallel DBMSs. However,
+translating these techniques to a MapReduce implementation such as Hadoop presents a unique
+challenge that can lead to new design choices.
+
+Inspired by Floratoru et al. \cite{ref:floratou}, we propose to explore the area of column-oriented storage
+techniques for MapReduce which will investigate implementation of compression techniques. The paper only
+experiments with simple LZO compression, citing a belief that more advanced techniques which provide
+higher compression ratios induce too much overhead and actually harm performance. We plan to test
+this claim on a variety of compression techniques, in particular arithmetic coding, which we believe is
+well-suited to this application.
+
 \section{Inspiration: Floratou et al.}
 
 Our starting point for this project was a 2011 paper by Floratou et al., entitled
-\emph{Column-oriented storage techniques for MapReduce} \cite{ref:floratou}.  This work
+\emph{Column-oriented storage techniques for MapReduce}.  This work
 seeks to address many of the issues related to performance in the Hadoop implementation
 of MapReduce by incorporating techniques used in column-oriented and parallel database
 systems.  In particular, contributions of the paper include:
@@ -58,12 +75,143 @@ techniques.
 
 \subsection{MapReduce}
 
-\emph{(Samet?)}
+MapReduce (MR) is a new programming framework and implementation model for
+processing large data sets. The model uses a map function to process key/value pairs and generate a
+set of intermediate key/value pairs. The MapReduce library groups together all intermediate values
+associated with the same intermediate key and passes them to the reduce function. The reduce
+function accepts an intermediate key and a set of values for that key and merges these intermediate
+values to form a smaller set of values.
+
+These programs can be parallelized and executed on large cluster of commodity hardware
+resulting in highly scalable systems.
+
+Dean et al. present a performance experiment in 2008 \cite{ref:simplified}
+ where they test the system with a number
+of tasks (sort, grep, etc.). They notice that the input rate is higher than the shuffle rate and the output
+rate. They say that the reason is because most data is read from local disk. Also, they note that the
+shuffle rate is higher than the output rate because the output phase writes two copies of the sorted
+data. The reason why two copies are written is because of reliability and availability requirements.
+
+\subsection{Hadoop}
+
+Due to fact that our implementation will be built upon Hadoop, an open source framework
+implementing the MapReduce algorithm, we made an effort to learn more about it. We came
+across a book, \emph{Hadoop In Action} \cite{ref:hadoop-in-action}, which
+provides a deep insight as to what Hadoop is, how it is installed and configured and how the MR
+libraries are used inside of user programs. In the book, Chuck Lam provides an answer to a simple
+question, we all may have asked us at some point: \emph{what makes Hadoop better than standard relational
+databases?}
+
+\begin{itemize}
+\item One reason is that SQL (Structured Query Language) is by design targeted at structured
+data. Many of Hadoop’s initial applications deal with unstructured data such as text. From
+this perspective Hadoop provides a more general paradigm than SQL. For working only
+with structured data, the comparison is more nuanced. In principle, SQL and Hadoop can be
+complementary, as SQL is a query language which can be implemented on top of Hadoop
+as the execution engine. But in practice, SQL databases tend to refer to a whole set of legacy
+technologies.
+\item Scaling commercial relational databases is expensive. Their design is more friendly to
+scaling up. To run a bigger database you need to buy a bigger machine. Whereas Hadoop
+is designed to be a scale-out architecture operating on a cluster of commodity PC
+machines. Adding more resources means adding more machines to the Hadoop cluster.
+\item A fundamental tenet of relational databases is that data resides in tables having relational
+structure defined by a schema. Although the relational model has great formal properties,
+many modern applications deal with data types that don’t fit well into this model. Text
+documents, images, and XML files are popular examples. Also, large data sets are often
+unstructured or semistructured. Hadoop uses key/value pairs as its basic data unit, which is
+flexible enough to work with the less-structured data types. In Hadoop, data can originate in any
+form, but it eventually transforms into (key/value) pairs for the processing functions to
+work on.
+\item SQL is fundamentally a high-level declarative language. You query data by stating the result
+you want and let the database engine figure out how to derive it. Under MapReduce you specify
+the actual steps in processing the data, which is more analogous to an execution plan for a SQL
+engine. Under SQL you have query statements; under MapReduce you have scripts and codes.
+MapReduce allows you to process data in a more general fashion than SQL queries.
+\item Hadoop is designed for offline processing and analysis of large-scale data. It doesn’t work for
+random reading and writing of a few records, which is the type of load for online transaction
+processing.
+\end{itemize}
+
+We also explored Hadoop’s architecture and found out that on a fully configured cluster, running
+Hadoop means running a set of daemons, or resident programs, on the different servers in the
+network. These daemons have specific roles; some exist only on one server, some exist across multiple
+servers. The daemons include:
+
+\begin{itemize}
+\item NameNode
+\item DataNode
+\item Secondary NameNode
+\item JobTracker
+\item TaskTracker
+\end{itemize}
+
+Hadoop Distributed File System (HDFS) is a filesystem designed for large-scale distributed data
+processing under frameworks such as MapReduce. In fact, it is considered that HDFS has its roots
+from the Google File System (GFS), which was introduced by Ghemawat et al. in 2003 \cite{ref:gfs}.
+The GFS is scalable and implemented for large, distributed, data-intensive applications.
+
+According to Zaharia et al. \cite{ref:heterogeneous}, Hadoop's performance is tied to its task scheduler,
+which assumes that cluster nodes are homogeneous and tasks make progress linearly. Based on this
+assumption, task scheduler decides when to re-execute tasks that appear to be stragglers. In
+practice, this assumption doesn't hold. Zaharia et al. shows that Hadoop's scheduler can cause
+severe performance degradation in heterogeneous environments. They experiment this Amazon's EC2
+and come up with a new scheduling algorithm: Longest Approximate Time to End (LATE). They
+claim that this algorithm can improve Hadoop response time by a factor of 2.
+
+They identify a flaw in Hadoop with regard to threshold-based scheduling algorithm. So,
+they end up implementing a new scheduling algorithm, LATE, that uses estimated finish times
+to speculatively execute the tasks that hurt the response time the most. According to the authors,
+LATE performs significantly better than Hadoop’s default speculative execution algorithm in real
+workloads on Amazon’s Elastic Compute Cloud.
 
 \subsection{Column-stores}
 
-\emph{(Samet?)}
+Choice of data structure has a great role in compression. Turning list of key/value pairs as
+HDFS uses into column-store would obviously allow us obtain the best benefit out of compression.
+Hence we have carefully been exploring column-stores.
 
+Column-stores store each database table column separately, with attribute values belonging to the
+same column stored contiguously, compressed, and densely packed, as opposed to traditional database
+systems that store entire records one after the other. Reading a subset of a table’s columns becomes
+faster, at the potential expense of excessive disk-head seeking from column to column for scattered
+reads or updates. In 2009 paper, Abadi et al \cite{ref:col-oriented} indicate that one of the most-often
+cited advantages of column-stores is data compression. The intuitive argument for why column-stores compress data
+well is that compression algorithms perform better on data with low information entropy (high data
+value locality). However, column-stores come with a price; two of the most-often cited disadvantages
+of column-stores are write operations and tuple construction. Write operations are generally
+considered problematic for two reasons:
+
+\begin{itemize}
+\item Inserted tuples have to be broken up into their component attributes and each
+attribute must be written separately
+\item The dense packed data layout makes moving tuples within a page nearly impossible
+\end{itemize}
+
+Stonebraker et al. make a reference to Abadi et al. paper and implement a column-store system, C-
+Store. This implementation reflects all column-store properties as outlined in their 2005 paper
+\cite{ref:cstore}.
+
+From another perspective Dao Vo et al. in their 2007 paper \cite{ref:table-dep} formalize the
+notion of column dependency as a way to capture information redundancy across columns and discuss how to
+automatically compute and use it to substantially improve table compression. They elaborate on
+a compression technique for table data based on discovering dependency relations among the
+columns of a table and using them to transform the data to enhance compressibility. Assuming
+some measure to assess the strength of column dependency, the notion of a k-transform is
+introduced to represent a data transformation plan based on column dependency.
+
+According to the authors, experiments based on a variety of table data show that the presented
+algorithm performs well. They experiment the performance and put the system in a benchmark
+with \verb+pzip+. The results show that their system outperforms \verb+pzip+. According to the
+authors, \verb+pzip+ represents a significant improvement over conventional techniques for
+compressing table data. However, its method of grouping columns based on
+some external compressor does not directly address the information redundancy arising from column
+dependencies. Further, the plan computation in \verb+pzip+, i.e., its column grouping, is slow and must be
+done off-line for an entire class of tables. As such, there is no recovery mechanism in \verb+pzip+ if a
+computed plan no longer matches the data characteristics in a particular table. In contrast, the
+presented algorithm delivers dependency transform computation which is fast and can be used on-line
+for each table. In fact, for large tables where the table characteristics may change between
+sufficiently long sequences of rows, a new dependency transform could be recomputed
+whenever compression degradation is detected.
 
 \subsection{Compression Techniques}
 
@@ -97,9 +245,9 @@ focused heavily on lossless compression techniques targetting scientific applica
 deployed in extreme-scale parallel machines (i.e, IBM Blue Gene/L). However, 
 compression was primarily on large amount of log data. The study found that lossless
 compression facilitates storage, archiving, and network transfer of data saving 
-storage and netwrok bandwidth. Experimental results showed 35.5% improvement in 
-compression ratio and 76.6% improvement in compression time over bzip2 and 21% 
-improvement over compression ratio and 72.5% compression time over LZMA level 9 
+storage and netwrok bandwidth. Experimental results showed 35.5\% improvement in 
+compression ratio and 76.6\% improvement in compression time over bzip2 and 21\% 
+improvement over compression ratio and 72.5\% compression time over LZMA level 9 
 compression by 7zip. Teh approach defines a compression pipeline with different 
 compression algorithms used in each stage. Best compression technique for each 
 stage is chosen from a set of compression utilities.
@@ -276,7 +424,7 @@ compression algorithms at all.
 
 
 Although not much of work is performed within the Hadoop MapReduce framework,
-a study by Jacopo et. al \cite{web-compression} introduce a MapReduce programming 
+a study by Jacopo et. al \cite{ref:web-compression} introduce a MapReduce programming 
 model based compression and decompression technique that have linearly scaled 
 performance gains. MapReduce framework handled compression/decompression to reduce
 the amount of work done but the dictionary scheme is used to store data. However, 
@@ -335,12 +483,29 @@ framework.
                 (SOCC '11). ACM, New York, NY, USA, Article 21, 14 pages.
                 DOI=10.1145/2038916.2038937 http://doi.acm.org/10.1145/2038916.2038937
 
+\bibitem{ref:lossless-cluster}	Balakrishnan, R.; Sahoo, R.K., "Lossless compression 
+		for large scale cluster logs," Parallel and Distributed Processing 
+		Symposium, 2006. IPDPS 2006. 20th International , vol., no., pp.7 pp., 
+		25-29 April 2006 doi: 10.1109/IPDPS.2006.1639692
+		URL: http://ieeexplore.ieee.org/stamp/stamp.jsp? tp=\&arnumber=1639692\&isnumber=34366
+
+\bibitem{ref:table-dep} Binh Dao Vo and Kiem-Phong Vo. 2007. Compressing table data
+                with column dependency. Theor. Comput. Sci. 387, 3
+                (November 2007), 273-283. DOI=10.1016/j.tcs.2007.07.016
+                http://dx.doi.org/10.1016/j.tcs.2007.07.016
+
 \bibitem{ref:cloud-comp} Bogdan Nicolae. 2010. High throughput data-compression for cloud
                 storage. In Proceedings of the Third international
                 conference on Data management in grid and peer-to-peer
                 systems (Globe'10), Abdelkader Hameurlain, Franck Morvan,
                 and A. Min Tjoa (Eds.). Springer-Verlag, Berlin,
                 Heidelberg, 1-12.
+
+\bibitem{ref:hadoop-in-action} Chuck Lam.  Hadoop in Action.  2011.
+
+\bibitem{ref:col-oriented} Daniel J. Abadi, Peter A. Boncz, and Stavros Harizopoulos. 2009.
+                Column-oriented database systems. Proc. VLDB Endow. 2,
+                2 (August 2009), 1664-1665.
 
 \bibitem{ref:colstore-comp} D. J. Abadi, S. Madden, and M. Ferreira. Integrating
                 Compression and Execution in Column-Oriented Database
@@ -349,6 +514,10 @@ framework.
 \bibitem{ref:colstores} D. Abadi, S. R. Madden, and N. Hachem. Column-Stores
                 vs. Row-Stores: How Different Are They Really? In
                 SIGMOD, pages 967–980, 2008.
+
+\bibitem{ref:perf-study} D. Jiang, B. C. Ooi, L. Shi, and S. Wu. The Performance of
+                MapReduce: An In-depth Study. PVLDB, 3(1):472–483,
+                2010.
 
 \bibitem{ref:comp-study} Ghassan Samara, Ahmad El-Halabi, and Jalal Kawash. 2007. Compressing
                 serialized java objects: a comparative analysis of six
@@ -361,18 +530,23 @@ framework.
 		Proceedings of the IRE, 40(9), 1098-1101. Retrieved from
 		http://ieeexplore.ieee.org/lpdocs/epic03 /wrapper.htm?arnumber=4051119
 
-\bibitem{ref:perf-study} D. Jiang, B. C. Ooi, L. Shi, and S. Wu. The Performance of
-                MapReduce: An In-depth Study. PVLDB, 3(1):472–483,
-                2010.
-
 \bibitem{ref:arith} Ian H. Witten, Radford M. Neal, and John G. Cleary. 1987.
                 Arithmetic coding for data compression. Commun.
                 ACM 30, 6 (June 1987), 520-540. DOI=10.1145/214762.214771
-                http://doi.acm.org/10.1145/214762.214771
 
 \bibitem{ref:lz77} Jacob Ziv and Abraham Lempel; A Universal Algorithm for Sequential
         	Data Compression, IEEE Transactions on Information Theory,
         	23(3), pp. 337–343, May 1977.
+
+\bibitem{ref:web-compression} Jacopo Urbani, Jason Maassen, and Henri Bal. 2010. Massive 
+		Semantic Web data compression with MapReduce. In Proceedings of the 19th 
+		ACM International Symposium on High Performance Distributed Computing 
+		(HPDC '10). ACM, New York, NY, USA, 795-802. DOI=10.1145/1851476.1851591 
+	       	http://doi.acm.org/10.1145/1851476.1851591	
+
+\bibitem{ref:simplified} J. Dean and S. Ghemawat. MapReduce: Simplified Data
+                Processing on Large Clusters. CACM, 51(1):107–113, 2008.
+               http://doi.acm.org/10.1145/214762.214771
 
 \bibitem{ref:friends-or-foes-resp} J. Dean and S. Ghemawat. MapReduce: A Flexible Data
                 Processing Tool. CACM, 53:72–77, January 2010.
@@ -380,6 +554,20 @@ framework.
 \bibitem{ref:hadoop++} J. Dittrich, J.-A. Quian-Ruiz, A. Jindal, Y. Kargin,
                 V. Setty, and J. Schad. Hadoop++: Making a Yellow
                 Elephant Run Like a Cheetah. PVLDB, 3(1):518–529, 2010.\
+
+\bibitem{ref:heterogeneous} Matei Zaharia, Andy Konwinski, Anthony D. Joseph, Randy Katz,
+                and Ion Stoica. 2008. Improving MapReduce performance
+                in heterogeneous environments. In Proceedings of the
+                8th USENIX conference on Operating systems design and
+                implementation (OSDI'08). USENIX Association,
+                Berkeley, CA, USA, 29-42.
+
+\bibitem{ref:cstore} Mike Stonebraker, Daniel J. Abadi, Adam Batkin, Xuedong Chen,
+                Mitch Cherniack, Miguel Ferreira, Edmond Lau, Amerson Lin,
+                Sam Madden, Elizabeth O'Neil, Pat O'Neil, Alex Rasin,
+                Nga Tran, and Stan Zdonik. 2005. C-store: a column-oriented
+                DBMS. In Proceedings of the 31st international conference
+                on Very large data bases (VLDB '05). VLDB Endowment 553-564.
 
 \bibitem{ref:friends-or-foes} Michael Stonebraker, Daniel Abadi, David J. DeWitt, Sam Madden,
                 Erik Paulson, Andrew Pavlo, and Alexander Rasin. 2010.
@@ -389,6 +577,18 @@ framework.
 
 \bibitem{ref:lzo} Oberhumer, M.F.X.J.: Lempel-ziv-oberhumer. http://www.oberhumer.com/
 		opensource/lzo (2009)
+
+\bibitem{ref:gfs} Sanjay Ghemawat, Howard Gobioff, and Shun-Tak Leung. 2003.
+                The Google file system. SIGOPS Oper. Syst. Rev. 37,
+                5 (October 2003), 29-43. DOI=10.1145/1165389.945450
+                http://doi.acm.org/10.1145/1165389.945450
+
+\bibitem{ref:entropy-compression} Vijayshankar Raman and Garret Swart. 2006. How to 
+		wring a table dry: entropy compression of relations and querying of 
+		compressed relations. In Proceedings of the 32nd international conference 
+		on Very large data bases (VLDB '06), Umeshwar Dayal, Khu-Yong Whang, 
+		David Lomet, Gustavo Alonso, Guy Lohman, Martin Kersten, Sang K. Cha, 
+		and Young-Kuk Kim (Eds.). VLDB Endowment 858-869.
 
 \bibitem{ref:skiplist} W. Pugh. Skip Lists: A Probabilistic Alternative to
         	Balanced Trees. CACM, 33(6):668–676, 1990.
@@ -404,24 +604,7 @@ framework.
         	Z. Xu. RCFile: A Fast and Space-efficient Data Placement
         	Structure in MapReduce-based Warehouse Systems. In ICDE, 2011.
 
-\bibitem{ref:lossless-cluster}	Balakrishnan, R.; Sahoo, R.K., "Lossless compression 
-		for large scale cluster logs," Parallel and Distributed Processing 
-		Symposium, 2006. IPDPS 2006. 20th International , vol., no., pp.7 pp., 
-		25-29 April 2006 doi: 10.1109/IPDPS.2006.1639692
-		URL: http://ieeexplore.ieee.org/stamp/stamp.jsp?tp=\&arnumber=1639692\&isnumber=34366
 
-\bibitem{ref:entropy-compression} Vijayshankar Raman and Garret Swart. 2006. How to 
-		wring a table dry: entropy compression of relations and querying of 
-		compressed relations. In Proceedings of the 32nd international conference 
-		on Very large data bases (VLDB '06), Umeshwar Dayal, Khu-Yong Whang, 
-		David Lomet, Gustavo Alonso, Guy Lohman, Martin Kersten, Sang K. Cha, 
-		and Young-Kuk Kim (Eds.). VLDB Endowment 858-869.
-
-\bibitem{ref:web-compression} Jacopo Urbani, Jason Maassen, and Henri Bal. 2010. Massive 
-		Semantic Web data compression with MapReduce. In Proceedings of the 19th 
-		ACM International Symposium on High Performance Distributed Computing 
-		(HPDC '10). ACM, New York, NY, USA, 795-802. DOI=10.1145/1851476.1851591 
-	       	http://doi.acm.org/10.1145/1851476.1851591	
 
 
 \end{thebibliography}
